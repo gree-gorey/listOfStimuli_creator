@@ -2,6 +2,7 @@
 
 import time
 import codecs
+import pickle
 
 __author__ = 'Gree-gorey'
 
@@ -52,8 +53,14 @@ with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
         newStore.words[-1].syl_length = line[8]
         newStore.words[-1].ph_length = line[9]
 
-for noun in sorted(newStore.words):
-    print noun.name, noun.age
+# for noun in sorted(newStore.words):
+#     print noun.name, noun.age
+
+w = codecs.open(u'/home/gree-gorey/stimdb/nouns.p', u'w', u'utf-8')
+pickle.dump(newStore, w)
+w.close()
+
+# pickle.load(f)
 
 t2 = time.time()
 
