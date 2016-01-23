@@ -73,7 +73,7 @@ newStore.minimum = copy.deepcopy(newStore.words[0])
 for high_noun in sorted(newStore.words, reverse=True):
     if len(newStore.high) < 30:
         newStore.high.append(high_noun)
-        for low_noun in sorted(newStore.words, reverse=True)[:len(newStore.words)/2:]:
+        for low_noun in sorted(newStore.words)[:len(newStore.words)/2:]:
             length = (low_noun.diff**2 + high_noun.same**2)**1/2
             if length < newStore.minimum.distance:
                 newStore.minimum = copy.deepcopy(low_noun)
