@@ -65,10 +65,13 @@ with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
 for noun in newStore.words:
     for i in xrange(len(noun.features)):
         noun.features[i] = (noun.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
-    noun.same = (sum(x**2 for x in noun.features[7:8]))**1/2
-    noun.diff = (sum(x**2 for x in noun.features[:3]))**1/2
+    # noun.same = (sum(x**2 for x in noun.features[7:8]))**1/2
+    # noun.diff = (sum(x**2 for x in noun.features[:3]))**1/2
+    noun.same = noun.features[7]
+    noun.diff = noun.features[9]
 
-newStore.minimum = copy.deepcopy(newStore.words[0])
+newStore.low = copy.deepcopy(sorted(newStore.words)[:len(newStore.words)/2:])
+newStore.high = copy.deepcopy(sorted(newStore.words)[len(newStore.words)/2::])
 
 for high_noun in sorted(newStore.words, reverse=True):
     if len(newStore.high) < 30:
