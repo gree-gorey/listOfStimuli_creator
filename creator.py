@@ -42,114 +42,174 @@ class Noun:
         return self.diff == other.diff
 
 
-with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
-    newStore = Store()
-    j = 0
-    for line in f:
-        line = line.rstrip(u'\n').split(u'\t')
-        newStore.words.append(Noun())
-        newStore.words[-1].name = line[0]
-        newStore.words[-1].features = [float(x) for x in line[1::]]
-        if j == 0:
-            newStore.min = copy.deepcopy(newStore.words[-1].features)
-            newStore.max = copy.deepcopy(newStore.words[-1].features)
-        for i in xrange(len(newStore.words[-1].features)):
-            if newStore.words[-1].features[i] < newStore.min[i]:
-                newStore.min[i] = newStore.words[-1].features[i]
-            if newStore.words[-1].features[i] > newStore.max[i]:
-                newStore.max[i] = newStore.words[-1].features[i]
-        j += 1
-
-# for noun in sorted(newStore.words):
-#     print noun.name, noun.age
-
-
 def mean(arr):
     return sum(arr)/len(arr) if len(arr) > 0 else None
 
-# print newStore.min, newStore.max
 
-for noun in newStore.words:
-    noun.normalized_features = copy.deepcopy(noun.features)
-    for i in xrange(len(noun.features)):
-        noun.normalized_features[i] = (noun.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
-    noun.same = (sum(x**2 for x in noun.normalized_features[2:7]))**1/2
-    # noun.diff = (sum(x**2 for x in noun.features[:3]))**1/2
-    # noun.same = noun.normalized_features[2]
-    noun.diff = noun.normalized_features[7]
+newStore = Store()
 
-newStore.low = copy.deepcopy(sorted(newStore.words)[:len(newStore.words)/2:])
-newStore.high = copy.deepcopy(sorted(newStore.words)[len(newStore.words)/2::])
+#
+# with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
+#     j = 0
+#     for line in f:
+#         line = line.rstrip(u'\n').split(u'\t')
+#         newStore.words.append(Noun())
+#         newStore.words[-1].name = line[0]
+#         newStore.words[-1].features = [float(x) for x in line[1::]]
+#         if j == 0:
+#             newStore.min = copy.deepcopy(newStore.words[-1].features)
+#             newStore.max = copy.deepcopy(newStore.words[-1].features)
+#         for i in xrange(len(newStore.words[-1].features)):
+#             if newStore.words[-1].features[i] < newStore.min[i]:
+#                 newStore.min[i] = newStore.words[-1].features[i]
+#             if newStore.words[-1].features[i] > newStore.max[i]:
+#                 newStore.max[i] = newStore.words[-1].features[i]
+#         j += 1
 
-# print mean([word.same for word in newStore.low]), mean([word.same for word in newStore.high])
+with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
+    j = 0
+    for line in f:
+        line = line.rstrip(u'\n').split(u'\t')
+        newStore.high.append(Noun())
+        newStore.high[-1].name = line[0]
+        newStore.high[-1].features = [float(x) for x in line[1::]]
+        if j == 0:
+            newStore.min = copy.deepcopy(newStore.high[-1].features)
+            newStore.max = copy.deepcopy(newStore.high[-1].features)
+        for i in xrange(len(newStore.high[-1].features)):
+            if newStore.high[-1].features[i] < newStore.min[i]:
+                newStore.min[i] = newStore.high[-1].features[i]
+            if newStore.high[-1].features[i] > newStore.max[i]:
+                newStore.max[i] = newStore.high[-1].features[i]
+        j += 1
 
-distance = (mean([word.same for word in newStore.low]) + mean([word.same for word in newStore.high])) / 2
+with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
+    j = 0
+    for line in f:
+        line = line.rstrip(u'\n').split(u'\t')
+        newStore.low.append(Noun())
+        newStore.low[-1].name = line[0]
+        newStore.low[-1].features = [float(x) for x in line[1::]]
+        if j == 0:
+            newStore.min = copy.deepcopy(newStore.low[-1].features)
+            newStore.max = copy.deepcopy(newStore.low[-1].features)
+        for i in xrange(len(newStore.low[-1].features)):
+            if newStore.low[-1].features[i] < newStore.min[i]:
+                newStore.min[i] = newStore.low[-1].features[i]
+            if newStore.low[-1].features[i] > newStore.max[i]:
+                newStore.max[i] = newStore.low[-1].features[i]
+        j += 1
 
-minimum = 1
+
+parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+# different = 7
+N = len(parameters)
+
+
+for word in newStore.high:
+    word.normalized_features = copy.deepcopy(word.features)
+    for i in xrange(len(word.features)):
+        word.normalized_features[i] = (word.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
+    word.same = [word.normalized_features[i] for i in parameters]
+    # noun.diff = noun.normalized_features[different]
+
+for word in newStore.low:
+    word.normalized_features = copy.deepcopy(word.features)
+    for i in xrange(len(word.features)):
+        word.normalized_features[i] = (word.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
+    word.same = [word.normalized_features[i] for i in parameters]
+
+
+# newStore.low = copy.deepcopy(sorted(newStore.words)[:len(newStore.words)/2:])
+# newStore.high = copy.deepcopy(sorted(newStore.words)[len(newStore.words)/2::])
+
+# print mean([word.same[0] for word in newStore.low]), mean([word.same[0] for word in newStore.high])
+# print mean([word.same[1] for word in newStore.low]), mean([word.same[1] for word in newStore.high])
+
+distance = []
+for i in xrange(N):
+    distance.append((mean([word.same[i] for word in newStore.low]) + mean([word.same[i] for word in newStore.high])) / 2)
+
+# print distance
+
+minimum = N
 index = 0
 for i in xrange(len(newStore.low)):
-    if abs(newStore.low[i].same - distance) < minimum:
-        minimum = abs(newStore.low[i].same - distance)
+    from_distance = sum([abs(newStore.low[i].same[j] - distance[j]) for j in xrange(N)])
+    if from_distance < minimum:
+        minimum = from_distance
         index = i
 
 newStore.low_output.append(newStore.low[index])
 del newStore.low[index]
 
-minimum = 1
+# print newStore.low_output[0].same
+
+minimum = N
 index = 0
 for i in xrange(len(newStore.high)):
-    if abs(newStore.high[i].same - distance) < minimum:
-        minimum = abs(newStore.high[i].same - distance)
+    from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
+    if from_distance < minimum:
+        minimum = from_distance
         index = i
 
 newStore.high_output.append(newStore.high[index])
 del newStore.high[index]
 
-while len(newStore.high_output) < 50:
-    distance_for_low = mean([word.same for word in newStore.high_output])
-    minimum = 1
+# print newStore.high_output[0].same
+
+allow = True
+end = False
+p_value_diff = 0
+
+# while len(newStore.high_output) < 40:
+
+while allow:
+    distance_for_low = []
+    for i in xrange(N):
+        distance_for_low.append(mean([word.same[i] for word in newStore.high_output]))
+
+    minimum = N
     index = 0
     for i in xrange(len(newStore.low)):
-        if abs(newStore.low[i].same - distance_for_low) < minimum:
-            minimum = abs(newStore.low[i].same - distance_for_low)
+        from_distance = sum([abs(newStore.low[i].same[j] - distance_for_low[j]) for j in xrange(N)])
+        if from_distance < minimum:
+            minimum = from_distance
             index = i
+
     newStore.low_output.append(newStore.low[index])
     del newStore.low[index]
 
-    distance_for_high = mean([word.same for word in newStore.low_output])
-    minimum = 1
+    distance_for_high = []
+    for i in xrange(N):
+        distance_for_high.append(mean([word.same[i] for word in newStore.low_output]))
+
+    minimum = N
     index = 0
     for i in xrange(len(newStore.high)):
-        if abs(newStore.high[i].same - distance_for_high) < minimum:
-            minimum = abs(newStore.high[i].same - distance_for_high)
+        from_distance = sum([abs(newStore.high[i].same[j] - distance_for_high[j]) for j in xrange(N)])
+        if from_distance < minimum:
+            minimum = from_distance
             index = i
+
     newStore.high_output.append(newStore.high[index])
     del newStore.high[index]
 
-# for high_noun in sorted(newStore.words, reverse=True):
-#     if len(newStore.high) < 30:
-#         newStore.high.append(high_noun)
-#         for low_noun in sorted(newStore.words)[:len(newStore.words)/2:]:
-#             length = (low_noun.diff**2 + high_noun.same**2)**1/2
-#             if length < newStore.minimum.distance:
-#                 newStore.minimum = copy.deepcopy(low_noun)
-#         newStore.low.append(newStore.minimum)
-#     else:
-#         break
+    if len(newStore.high_output) > 15:
+        # p_value_diff = stats.ttest_ind([noun.normalized_features[different] for noun in newStore.high_output],
+        #                                [noun.normalized_features[different] for noun in newStore.low_output])[1]
 
-print mean([word.diff for word in newStore.low_output]), mean([word.diff for word in newStore.high_output])
-print mean([word.same for word in newStore.low_output]), mean([word.same for word in newStore.high_output])
+        for i in parameters:
+            p_value_same = stats.ttest_ind([noun.normalized_features[i] for noun in newStore.high_output],
+                                           [noun.normalized_features[i] for noun in newStore.low_output])[1]
 
-print u'\n##########################\n'
+            if p_value_same < 0.05:
+                end = True
 
-print stats.ttest_ind([noun.normalized_features[7] for noun in newStore.high_output], [noun.normalized_features[7] for noun in newStore.low_output]), u'\n'
-print stats.ttest_ind([noun.normalized_features[2] for noun in newStore.high_output], [noun.normalized_features[2] for noun in newStore.low_output])
-print stats.ttest_ind([noun.normalized_features[3] for noun in newStore.high_output], [noun.normalized_features[3] for noun in newStore.low_output])
-print stats.ttest_ind([noun.normalized_features[4] for noun in newStore.high_output], [noun.normalized_features[4] for noun in newStore.low_output])
-print stats.ttest_ind([noun.normalized_features[5] for noun in newStore.high_output], [noun.normalized_features[5] for noun in newStore.low_output])
-print stats.ttest_ind([noun.normalized_features[6] for noun in newStore.high_output], [noun.normalized_features[6] for noun in newStore.low_output])
+    if end or p_value_diff > 0.05:
+        allow = False
 
-print u'\n##########################\n'
+print len(newStore.high_output)
 
 # w = codecs.open(u'/home/gree-gorey/stimdb/nouns.p', u'w', u'utf-8')
 # pickle.dump(newStore, w)
