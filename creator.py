@@ -73,9 +73,9 @@ for noun in newStore.words:
     noun.normalized_features = copy.deepcopy(noun.features)
     for i in xrange(len(noun.features)):
         noun.normalized_features[i] = (noun.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
-    # noun.same = (sum(x**2 for x in noun.features[7:8]))**1/2
+    noun.same = (sum(x**2 for x in noun.normalized_features[2:7]))**1/2
     # noun.diff = (sum(x**2 for x in noun.features[:3]))**1/2
-    noun.same = noun.normalized_features[9]
+    # noun.same = noun.normalized_features[2]
     noun.diff = noun.normalized_features[7]
 
 newStore.low = copy.deepcopy(sorted(newStore.words)[:len(newStore.words)/2:])
@@ -105,7 +105,7 @@ for i in xrange(len(newStore.high)):
 newStore.high_output.append(newStore.high[index])
 del newStore.high[index]
 
-while len(newStore.high_output) < 30:
+while len(newStore.high_output) < 50:
     distance_for_low = mean([word.same for word in newStore.high_output])
     minimum = 1
     index = 0
@@ -142,8 +142,12 @@ print mean([word.same for word in newStore.low_output]), mean([word.same for wor
 
 print u'\n##########################\n'
 
-print stats.ttest_ind([noun.diff for noun in newStore.high_output], [noun.diff for noun in newStore.low_output])
-print stats.ttest_ind([noun.same for noun in newStore.high_output], [noun.same for noun in newStore.low_output])
+print stats.ttest_ind([noun.normalized_features[7] for noun in newStore.high_output], [noun.normalized_features[7] for noun in newStore.low_output]), u'\n'
+print stats.ttest_ind([noun.normalized_features[2] for noun in newStore.high_output], [noun.normalized_features[2] for noun in newStore.low_output])
+print stats.ttest_ind([noun.normalized_features[3] for noun in newStore.high_output], [noun.normalized_features[3] for noun in newStore.low_output])
+print stats.ttest_ind([noun.normalized_features[4] for noun in newStore.high_output], [noun.normalized_features[4] for noun in newStore.low_output])
+print stats.ttest_ind([noun.normalized_features[5] for noun in newStore.high_output], [noun.normalized_features[5] for noun in newStore.low_output])
+print stats.ttest_ind([noun.normalized_features[6] for noun in newStore.high_output], [noun.normalized_features[6] for noun in newStore.low_output])
 
 print u'\n##########################\n'
 
@@ -153,13 +157,13 @@ print u'\n##########################\n'
 
 # pickle.load(f)
 
-with codecs.open(u'/home/gree-gorey/stimdb/high.csv', u'w', u'utf-8') as w:
-    for word in newStore.high_output:
-        w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
-
-with codecs.open(u'/home/gree-gorey/stimdb/low.csv', u'w', u'utf-8') as w:
-    for word in newStore.low_output:
-        w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
+# with codecs.open(u'/home/gree-gorey/stimdb/high.csv', u'w', u'utf-8') as w:
+#     for word in newStore.high_output:
+#         w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
+#
+# with codecs.open(u'/home/gree-gorey/stimdb/low.csv', u'w', u'utf-8') as w:
+#     for word in newStore.low_output:
+#         w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
 
 t2 = time.time()
 
