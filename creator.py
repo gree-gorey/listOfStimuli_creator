@@ -47,25 +47,25 @@ def mean(arr):
     return sum(arr)/len(arr) if len(arr) > 0 else None
 
 
-newStore = Store()
+def compensate(higher, lower, i):
+    lowest_from_rest = 1
+    hhh = 0
+    for j in xrange(len(higher)):
+        if higher[j].normalized_features[i] < lowest_from_rest:
+            lowest_from_rest = higher[j].normalized_features[i]
+            hhh = j
 
-#
-# with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
-#     j = 0
-#     for line in f:
-#         line = line.rstrip(u'\n').split(u'\t')
-#         newStore.words.append(Noun())
-#         newStore.words[-1].name = line[0]
-#         newStore.words[-1].features = [float(x) for x in line[1::]]
-#         if j == 0:
-#             newStore.min = copy.deepcopy(newStore.words[-1].features)
-#             newStore.max = copy.deepcopy(newStore.words[-1].features)
-#         for i in xrange(len(newStore.words[-1].features)):
-#             if newStore.words[-1].features[i] < newStore.min[i]:
-#                 newStore.min[i] = newStore.words[-1].features[i]
-#             if newStore.words[-1].features[i] > newStore.max[i]:
-#                 newStore.max[i] = newStore.words[-1].features[i]
-#         j += 1
+    highest_from_rest = 0
+    lll = 0
+    for j in xrange(len(lower)):
+        if lower[j].normalized_features[i] > highest_from_rest:
+            highest_from_rest = lower[j].normalized_features[i]
+            lll = j
+
+    return hhh, lll
+
+
+newStore = Store()
 
 with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
     j = 0
@@ -102,7 +102,8 @@ with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
         j += 1
 
 
-parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+# parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+parameters = [1, 2, 3, 4, 8, 9]
 # different = 7
 N = len(parameters)
 
@@ -120,145 +121,89 @@ for word in newStore.low:
         word.normalized_features[i] = (word.features[i] - newStore.min[i]) / (newStore.max[i] - newStore.min[i])
     word.same = [word.normalized_features[i] for i in parameters]
 
+# newStore.backup_low = copy.deepcopy(newStore.low)
+# newStore.backup_high = copy.deepcopy(newStore.high)
 
-# newStore.low = copy.deepcopy(sorted(newStore.words)[:len(newStore.words)/2:])
-# newStore.high = copy.deepcopy(sorted(newStore.words)[len(newStore.words)/2::])
+while len(newStore.high_output) != 150:
+    newStore.low += newStore.low_output
+    newStore.high += newStore.high_output
 
-# print mean([word.same[0] for word in newStore.low]), mean([word.same[0] for word in newStore.high])
-# print mean([word.same[1] for word in newStore.low]), mean([word.same[1] for word in newStore.high])
-
-# distance = []
-# for i in xrange(N):
-#     distance.append((mean([word.same[i] for word in newStore.low]) + mean([word.same[i] for word in newStore.high])) / 2)
-
-# print distance
-
-# minimum = N
-# index = 0
-# for i in xrange(len(newStore.low)):
-#     from_distance = sum([abs(newStore.low[i].same[j] - distance[j]) for j in xrange(N)])
-#     if from_distance < minimum:
-#         minimum = from_distance
-#         index = i
-
-index = random.randint(0, len(newStore.low)-1)
-
-
-# distance = newStore.low[index].same
-newStore.low_output.append(newStore.low[index])
-del newStore.low[index]
-
-# print newStore.low_output[0].same
-
-# minimum = N
-# index = 0
-# for i in xrange(len(newStore.high)):
-#     from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
-#     if from_distance < minimum:
-#         minimum = from_distance
-#         index = i
-
-# minimum = N
-# index = 0
-# for i in xrange(len(newStore.high)):
-#     from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
-#     if from_distance < minimum:
-#         minimum = from_distance
-#         index = i
-
-index = random.randint(0, len(newStore.high)-1)
-
-newStore.high_output.append(newStore.high[index])
-del newStore.high[index]
-
-# print newStore.high_output[0].same
-
-allow = True
-end = False
-p_value_diff = 0
-
-
-def compensate(higher, lower, i):
-    lowest_from_rest = 1
-    hhh = 0
-    for j in xrange(len(higher)):
-        if higher[j].normalized_features[i] < lowest_from_rest:
-            lowest_from_rest = higher[j].normalized_features[i]
-            hhh = j
-
-    highest_from_rest = 0
-    lll = 0
-    for j in xrange(len(lower)):
-        if lower[j].normalized_features[i] > highest_from_rest:
-            highest_from_rest = lower[j].normalized_features[i]
-            lll = j
-
-    return hhh, lll
-
-# while len(newStore.high_output) < 40:
-
-while allow:
-    distance_for_low = []
-    for i in xrange(N):
-        distance_for_low.append(mean([word.same[i] for word in newStore.high_output]))
-
-    minimum = N
-    index = 0
-    for i in xrange(len(newStore.low)):
-        from_distance = sum([abs(newStore.low[i].same[j] - distance_for_low[j]) for j in xrange(N)])
-        if from_distance < minimum:
-            minimum = from_distance
-            index = i
+    index = random.randint(0, len(newStore.low)-1)
 
     newStore.low_output.append(newStore.low[index])
     del newStore.low[index]
 
-    distance_for_high = []
-    for i in xrange(N):
-        distance_for_high.append(mean([word.same[i] for word in newStore.low_output]))
-
-    minimum = N
-    index = 0
-    for i in xrange(len(newStore.high)):
-        from_distance = sum([abs(newStore.high[i].same[j] - distance_for_high[j]) for j in xrange(N)])
-        if from_distance < minimum:
-            minimum = from_distance
-            index = i
+    index = random.randint(0, len(newStore.high)-1)
 
     newStore.high_output.append(newStore.high[index])
     del newStore.high[index]
 
-    if len(newStore.high_output) > 15:
-        # p_value_diff = stats.ttest_ind([noun.normalized_features[different] for noun in newStore.high_output],
-        #                                [noun.normalized_features[different] for noun in newStore.low_output])[1]
+    allow = True
+    end = False
+    p_value_diff = 0
 
-        for i in parameters:
-            p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.high_output],
-                                           [word.normalized_features[i] for word in newStore.low_output])[1]
+    while allow and len(newStore.high_output) < 150:
+        distance_for_low = []
+        for i in xrange(N):
+            distance_for_low.append(mean([word.same[i] for word in newStore.high_output]))
 
-            # if p_value_same < 0.05:
-            if p_value_same < 0.1:
-                high_mean = mean([word.normalized_features[i] for word in newStore.high_output])
-                low_mean = mean([word.normalized_features[i] for word in newStore.low_output])
+        minimum = N
+        index = 0
+        for i in xrange(len(newStore.low)):
+            from_distance = sum([abs(newStore.low[i].same[j] - distance_for_low[j]) for j in xrange(N)])
+            if from_distance < minimum:
+                minimum = from_distance
+                index = i
 
-                if high_mean > low_mean:
-                    hhh, lll = compensate(newStore.high, newStore.low, i)
-                    newStore.high_output.append(newStore.high[hhh])
-                    newStore.low_output.append(newStore.low[lll])
-                else:
-                    hhh, lll = compensate(newStore.low, newStore.high, i)
-                    newStore.high_output.append(newStore.high[lll])
-                    newStore.low_output.append(newStore.low[hhh])
+        newStore.low_output.append(newStore.low[index])
+        del newStore.low[index]
 
-                for k in parameters:
-                    p_value_same = stats.ttest_ind([noun.normalized_features[k] for noun in newStore.high_output],
-                                                   [noun.normalized_features[k] for noun in newStore.low_output])[1]
+        distance_for_high = []
+        for i in xrange(N):
+            distance_for_high.append(mean([word.same[i] for word in newStore.low_output]))
 
-                    if p_value_same < 0.05:
-                        end = True
+        minimum = N
+        index = 0
+        for i in xrange(len(newStore.high)):
+            from_distance = sum([abs(newStore.high[i].same[j] - distance_for_high[j]) for j in xrange(N)])
+            if from_distance < minimum:
+                minimum = from_distance
+                index = i
 
-    if end or p_value_diff > 0.05:
-        allow = False
+        newStore.high_output.append(newStore.high[index])
+        del newStore.high[index]
+
+        if len(newStore.high_output) > 15:
+            # p_value_diff = stats.ttest_ind([noun.normalized_features[different] for noun in newStore.high_output],
+            #                                [noun.normalized_features[different] for noun in newStore.low_output])[1]
+
+            for i in parameters:
+                p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.high_output],
+                                               [word.normalized_features[i] for word in newStore.low_output])[1]
+
+                # if p_value_same < 0.05:
+                if p_value_same < 0.1:
+                    high_mean = mean([word.normalized_features[i] for word in newStore.high_output])
+                    low_mean = mean([word.normalized_features[i] for word in newStore.low_output])
+
+                    if high_mean > low_mean:
+                        hhh, lll = compensate(newStore.high, newStore.low, i)
+                        newStore.high_output.append(newStore.high[hhh])
+                        newStore.low_output.append(newStore.low[lll])
+                    else:
+                        hhh, lll = compensate(newStore.low, newStore.high, i)
+                        newStore.high_output.append(newStore.high[lll])
+                        newStore.low_output.append(newStore.low[hhh])
+
+                    for k in parameters:
+                        p_value_same = stats.ttest_ind([noun.normalized_features[k] for noun in newStore.high_output],
+                                                       [noun.normalized_features[k] for noun in newStore.low_output])[1]
+
+                        if p_value_same < 0.05:
+                            end = True
+
+        if end or p_value_diff > 0.05:
+            allow = False
 
 print len(newStore.high_output), len(newStore.low_output)
 
