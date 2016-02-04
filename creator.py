@@ -177,6 +177,24 @@ allow = True
 end = False
 p_value_diff = 0
 
+
+def compensate(higher, lower, i):
+    lowest_from_rest = 1
+    hhh = 0
+    for j in xrange(len(higher)):
+        if higher[j].normalized_features[i] < lowest_from_rest:
+            lowest_from_rest = higher[j].normalized_features[i]
+            hhh = j
+
+    highest_from_rest = 0
+    lll = 0
+    for j in xrange(len(lower)):
+        if lower[j].normalized_features[i] > highest_from_rest:
+            highest_from_rest = lower[j].normalized_features[i]
+            lll = j
+
+    return hhh, lll
+
 # while len(newStore.high_output) < 40:
 
 while allow:
@@ -215,25 +233,51 @@ while allow:
         #                                [noun.normalized_features[different] for noun in newStore.low_output])[1]
 
         for i in parameters:
-            p_value_same = stats.ttest_ind([noun.normalized_features[i] for noun in newStore.high_output],
-                                           [noun.normalized_features[i] for noun in newStore.low_output])[1]
+            p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.high_output],
+                                           [word.normalized_features[i] for word in newStore.low_output])[1]
 
-            if p_value_same < 0.05:
-                end = True
+            # if p_value_same < 0.05:
+            if p_value_same < 0.1:
+                high_mean = mean([word.normalized_features[i] for word in newStore.high_output])
+                low_mean = mean([word.normalized_features[i] for word in newStore.low_output])
+
+                if high_mean > low_mean:
+                    hhh, lll = compensate(newStore.high, newStore.low, i)
+                    newStore.high_output.append(newStore.high[hhh])
+                    newStore.low_output.append(newStore.low[lll])
+                else:
+                    hhh, lll = compensate(newStore.low, newStore.high, i)
+                    newStore.high_output.append(newStore.high[lll])
+                    newStore.low_output.append(newStore.low[hhh])
+
+                for k in parameters:
+                    p_value_same = stats.ttest_ind([noun.normalized_features[k] for noun in newStore.high_output],
+                                                   [noun.normalized_features[k] for noun in newStore.low_output])[1]
+
+                    if p_value_same < 0.05:
+                        end = True
 
     if end or p_value_diff > 0.05:
         allow = False
 
-print len(newStore.high_output)
+print len(newStore.high_output), len(newStore.low_output)
 
 for i in xrange(6):
-    print newStore.high_output[i].name
+    print newStore.low_output[i].name
 
 # w = codecs.open(u'/home/gree-gorey/stimdb/nouns.p', u'w', u'utf-8')
 # pickle.dump(newStore, w)
 # w.close()
 
 # pickle.load(f)
+
+for i in parameters:
+    p_value_same = stats.ttest_ind([noun.normalized_features[i] for noun in newStore.high_output],
+                                       [noun.normalized_features[i] for noun in newStore.low_output])[1]
+
+    print p_value_same
+
+print '\n######################################\n'
 
 # with codecs.open(u'/home/gree-gorey/stimdb/high.csv', u'w', u'utf-8') as w:
 #     for word in newStore.high_output:
