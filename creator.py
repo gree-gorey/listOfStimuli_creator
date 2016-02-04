@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import random
 import time
 import codecs
 import pickle
@@ -126,32 +127,46 @@ for word in newStore.low:
 # print mean([word.same[0] for word in newStore.low]), mean([word.same[0] for word in newStore.high])
 # print mean([word.same[1] for word in newStore.low]), mean([word.same[1] for word in newStore.high])
 
-distance = []
-for i in xrange(N):
-    distance.append((mean([word.same[i] for word in newStore.low]) + mean([word.same[i] for word in newStore.high])) / 2)
+# distance = []
+# for i in xrange(N):
+#     distance.append((mean([word.same[i] for word in newStore.low]) + mean([word.same[i] for word in newStore.high])) / 2)
 
 # print distance
 
-minimum = N
-index = 0
-for i in xrange(len(newStore.low)):
-    from_distance = sum([abs(newStore.low[i].same[j] - distance[j]) for j in xrange(N)])
-    if from_distance < minimum:
-        minimum = from_distance
-        index = i
+# minimum = N
+# index = 0
+# for i in xrange(len(newStore.low)):
+#     from_distance = sum([abs(newStore.low[i].same[j] - distance[j]) for j in xrange(N)])
+#     if from_distance < minimum:
+#         minimum = from_distance
+#         index = i
 
+index = random.randint(0, len(newStore.low)-1)
+
+
+# distance = newStore.low[index].same
 newStore.low_output.append(newStore.low[index])
 del newStore.low[index]
 
 # print newStore.low_output[0].same
 
-minimum = N
-index = 0
-for i in xrange(len(newStore.high)):
-    from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
-    if from_distance < minimum:
-        minimum = from_distance
-        index = i
+# minimum = N
+# index = 0
+# for i in xrange(len(newStore.high)):
+#     from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
+#     if from_distance < minimum:
+#         minimum = from_distance
+#         index = i
+
+# minimum = N
+# index = 0
+# for i in xrange(len(newStore.high)):
+#     from_distance = sum([abs(newStore.high[i].same[j] - distance[j]) for j in xrange(N)])
+#     if from_distance < minimum:
+#         minimum = from_distance
+#         index = i
+
+index = random.randint(0, len(newStore.high)-1)
 
 newStore.high_output.append(newStore.high[index])
 del newStore.high[index]
@@ -210,6 +225,9 @@ while allow:
         allow = False
 
 print len(newStore.high_output)
+
+for i in xrange(6):
+    print newStore.high_output[i].name
 
 # w = codecs.open(u'/home/gree-gorey/stimdb/nouns.p', u'w', u'utf-8')
 # pickle.dump(newStore, w)
