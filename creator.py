@@ -4,6 +4,7 @@ import random
 import time
 import codecs
 import pickle
+import zipfile
 import copy
 from scipy import stats
 
@@ -41,6 +42,19 @@ class Noun:
 
     def __eq__(self, other):
         return self.diff == other.diff
+
+
+def create_zip(list_1, list_2):
+    with codecs.open(u'./data/list_1.csv', u'w', u'utf-8') as w:
+        w.write(list_1)
+
+    with codecs.open(u'./data/list_2.csv', u'w', u'utf-8') as w:
+        w.write(list_2)
+
+    Z = zipfile.ZipFile(u'output.zip', u'w')
+
+    Z.write(u'./data/list_1.csv')
+    Z.write(u'./data/list_2.csv')
 
 
 def mean(arr):
@@ -102,8 +116,8 @@ with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
         j += 1
 
 
-parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-# parameters = [1, 2, 3, 4, 8, 9]
+# parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+parameters = [1, 2, 8, 9]
 # different = 7
 N = len(parameters)
 
@@ -124,7 +138,9 @@ for word in newStore.low:
 # newStore.backup_low = copy.deepcopy(newStore.low)
 # newStore.backup_high = copy.deepcopy(newStore.high)
 
-while len(newStore.high_output) != 150:
+M = 400
+
+while len(newStore.high_output) != M:
     newStore.low += newStore.low_output
     newStore.high += newStore.high_output
 
@@ -145,7 +161,7 @@ while len(newStore.high_output) != 150:
     end = False
     p_value_diff = 0
 
-    while allow and len(newStore.high_output) < 150:
+    while allow and len(newStore.high_output) < M:
         distance_for_low = []
         for i in xrange(N):
             distance_for_low.append(mean([word.same[i] for word in newStore.high_output]))
@@ -184,10 +200,13 @@ while len(newStore.high_output) != 150:
                 p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.high_output],
                                                [word.normalized_features[i] for word in newStore.low_output])[1]
 
-                # if p_value_same < 0.05:
                 if p_value_same < 0.1:
                     high_mean = mean([word.normalized_features[i] for word in newStore.high_output])
                     low_mean = mean([word.normalized_features[i] for word in newStore.low_output])
+
+                    if len(newStore.high_output) == M:
+                        newStore.high.append(newStore.high_output.pop(random.randint(0, len(newStore.high_output)-1)))
+                        newStore.low.append(newStore.low_output.pop(random.randint(0, len(newStore.low_output)-1)))
 
                     if high_mean > low_mean:
                         hhh, lll = compensate(newStore.high, newStore.low, i)
@@ -210,8 +229,10 @@ while len(newStore.high_output) != 150:
 
 print len(newStore.high_output), len(newStore.low_output)
 
-for i in xrange(6):
-    print newStore.low_output[i].name
+print '\n######################################\n'
+
+# for i in xrange(6):
+#     print newStore.low_output[i].name
 
 # w = codecs.open(u'/home/gree-gorey/stimdb/nouns.p', u'w', u'utf-8')
 # pickle.dump(newStore, w)
