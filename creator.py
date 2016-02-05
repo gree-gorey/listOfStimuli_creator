@@ -102,8 +102,8 @@ with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
         j += 1
 
 
-# parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-parameters = [1, 2, 3, 4, 8, 9]
+parameters = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+# parameters = [1, 2, 3, 4, 8, 9]
 # different = 7
 N = len(parameters)
 
@@ -127,6 +127,9 @@ for word in newStore.low:
 while len(newStore.high_output) != 150:
     newStore.low += newStore.low_output
     newStore.high += newStore.high_output
+
+    newStore.low_output = []
+    newStore.high_output = []
 
     index = random.randint(0, len(newStore.low)-1)
 
