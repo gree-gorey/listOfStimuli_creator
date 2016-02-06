@@ -12,12 +12,13 @@ t1 = time.time()
 with open(u'/home/gree-gorey/stimdb/store.p', u'r') as f:
     newStore = pickle.load(f)
 
-same = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+same = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 # same = [1, 2, 8, 9]
 # different = 7
 length = 200
 
 newStore.setup_parameters(same, length)
+
 
 while newStore.sharp():
     newStore.add_first()
@@ -32,20 +33,22 @@ while newStore.sharp():
 
 
 def test(arr1, arr2):
-    shapiro_first = stats.shapiro(arr1)[1]
-    shapiro_second = stats.shapiro(arr2)[1]
-    if shapiro_first < 0.05 or shapiro_second < 0.05:
-        p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    else:
-        # levene = stats.levene(arr1, arr2)[1]
-        # if levene < 0.05:
-        #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
-        # else:
-        p_value = stats.ttest_ind(arr1, arr2)[1]
+    # shapiro_first = stats.shapiro(arr1)[1]
+    # shapiro_second = stats.shapiro(arr2)[1]
+    # if shapiro_first < 0.05 or shapiro_second < 0.05:
+    #     p_value = stats.mannwhitneyu(arr1, arr2)[1]
+    # else:
+    #     # levene = stats.levene(arr1, arr2)[1]
+    #     # if levene < 0.05:
+    #     #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
+    #     # else:
+    p_value = stats.ttest_ind(arr1, arr2, False)[1]
+    # p_value = stats.mannwhitneyu(arr1, arr2)[1]
     return p_value
 
 
 print len(newStore.first_list_output), len(newStore.second_list_output)
+print len(newStore.first_list), len(newStore.second_list)
 
 print '\n######################################\n'
 

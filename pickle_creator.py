@@ -11,12 +11,10 @@ newStore = Store()
 
 
 with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
-    newStore.read_words(f, u'noun')
+    newStore.read_nouns(f)
 
 with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
-    newStore.read_words(f, u'verb')
-
-newStore.normalize()
+    newStore.read_verbs(f)
 
 with codecs.open(u'/home/gree-gorey/stimdb/store.p', u'w', u'utf-8') as w:
     pickle.dump(newStore, w)

@@ -19,52 +19,54 @@ class Store:
         self.first_list_output = []
         self.second_list_output = []
         self.minimum = None
-        self.arr = []
-        self.nouns_min = []
-        self.nouns_max = []
-        self.verbs_min = []
-        self.verbs_max = []
         self.length = 0
         self.number_of_same = 0
         self.allow = True
         self.same = []
 
-    def read_words(self, f, pos):
-        j = 0
+    def read_verbs(self, f):
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
-            self.arr.append(Word())
-            self.arr[-1].name = line[0]
-            self.arr[-1].features = [float(x) for x in line[1::]]
+            self.verbs.append(Word())
+            self.verbs[-1].name = line[0]
+            self.verbs[-1].features = [float(x) for x in line[1:10:]]
+            self.verbs[-1].arg = int(line[10])
+            self.verbs[-1].reflexive = True if u'+' in line[11] else False
+            self.verbs[-1].instr = True if u'+' in line[12] else False
+            self.verbs[-1].name_rel = True if u'+' in line[13] else False
+
+    def read_nouns(self, f):
+        for line in f:
+            line = line.rstrip(u'\n').split(u'\t')
+            self.nouns.append(Word())
+            self.nouns[-1].part = int(line[0])
+            self.nouns[-1].name = line[1]
+            self.nouns[-1].features = [float(x) for x in line[2::]]
+
+    def find_min_max(self, arr):
+        j = 0
+        for word in arr:
             if j == 0:
-                self.min += self.arr[-1].features
-                self.max += self.arr[-1].features
-            for i in xrange(len(self.arr[-1].features)):
-                if self.arr[-1].features[i] < self.min[i]:
-                    self.min[i] = self.arr[-1].features[i]
-                if self.arr[-1].features[i] > self.max[i]:
-                    self.max[i] = self.arr[-1].features[i]
-            j += 1
-        if pos == u'noun':
-            self.nouns += self.arr
-            self.arr = []
-            self.nouns_min = self.min
-            self.nouns_max = self.max
-        elif pos == u'verb':
-            self.verbs += self.arr
-            self.arr = []
-            self.verbs_min = self.min
-            self.verbs_max = self.max
+                self.min += word.features
+                self.max += word.features
+            for i in xrange(len(word.features)):
+                if word.features[i] < self.min[i]:
+                    self.min[i] = word.features[i]
+                if word.features[i] > self.max[i]:
+                    self.max[i] = word.features[i]
+            j = 1
 
     def normalize(self):
-        for word in self.nouns:
+        self.find_min_max(self.first_list)
+        self.find_min_max(self.second_list)
+        for word in self.first_list:
             word.normalized_features += word.features
             for i in xrange(len(word.features)):
-                word.normalized_features[i] = (word.features[i] - self.nouns_min[i]) / (self.nouns_max[i] - self.nouns_min[i])
-        for word in self.verbs:
+                word.normalized_features[i] = (word.features[i] - self.min[i]) / (self.max[i] - self.min[i])
+        for word in self.second_list:
             word.normalized_features += word.features
             for i in xrange(len(word.features)):
-                word.normalized_features[i] = (word.features[i] - self.verbs_min[i]) / (self.verbs_max[i] - self.verbs_min[i])
+                word.normalized_features[i] = (word.features[i] - self.min[i]) / (self.max[i] - self.min[i])
 
     def create_zip(self):
         with codecs.open(u'./data/list_1.csv', u'w', u'utf-8') as w:
@@ -83,21 +85,25 @@ class Store:
                                 [word.normalized_features[i] for word in self.second_list_output])
 
             if p_value_same < 0.1:
-                first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
-                second_list_mean = mean([word.normalized_features[i] for word in self.second_list_output])
-
-                if self.sharp():
+                if self.equal():
                     self.first_list.append(self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1)))
                     self.second_list.append(self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1)))
+
+                first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
+                second_list_mean = mean([word.normalized_features[i] for word in self.second_list_output])
 
                 if first_list_mean > second_list_mean:
                     hhh, lll = compensate(self.first_list, self.second_list, i)
                     self.first_list_output.append(self.first_list[hhh])
+                    del self.first_list[hhh]
                     self.second_list_output.append(self.second_list[lll])
+                    del self.second_list[lll]
                 else:
                     hhh, lll = compensate(self.second_list, self.first_list, i)
                     self.first_list_output.append(self.first_list[lll])
+                    del self.first_list[lll]
                     self.second_list_output.append(self.second_list[hhh])
+                    del self.second_list[hhh]
 
                 for k in self.same:
                     p_value_same = test([word.normalized_features[k] for word in self.first_list_output],
@@ -106,16 +112,27 @@ class Store:
                     if p_value_same < 0.05:
                         self.allow = False
 
-    def setup_parameters(self, same, length, different=None):
+    def setup_parameters(self, same, length, instr=None, part=None):
         self.same = same
         self.number_of_same = len(same)
         self.length = length
-        if not different:
-            self.first_list += self.nouns
-            self.second_list += self.verbs
+        if instr:
+            for verb in self.verbs:
+                if verb.instr:
+                    self.first_list.append(verb)
+        else:
+            self.first_list += self.verbs
+        if part:
+            for noun in self.nouns:
+                if noun.part == 1:
+                    self.second_list.append(noun)
+        else:
+            self.second_list += self.nouns
+        # print len(self.first_list), len(self.second_list)
+        self.normalize()
         for word in self.first_list:
             word.same = [word.normalized_features[i] for i in same]
-            # noun.diff = noun.normalized_features[different]
+            # word.diff = word.normalized_features[different]
         for word in self.second_list:
             word.same = [word.normalized_features[i] for i in same]
 
@@ -167,11 +184,19 @@ class Store:
     def less(self):
         return len(self.first_list_output) < self.length
 
+    def equal(self):
+        return len(self.first_list_output) == self.length
+
 
 class Word:
     def __init__(self):
         self.name = u''
         self.features = []
+        self.part = 0
+        self.instr = None
+        self.agr = 0
+        self.reflexive = None
+        self.name_rel = None
         self.normalized_features = []
         self.same = 0
         self.diff = 0
@@ -219,5 +244,6 @@ def test(arr1, arr2):
     #     # if levene < 0.05:
     #     #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
     #     # else:
-    p_value = stats.ttest_ind(arr1, arr2)[1]
+    p_value = stats.ttest_ind(arr1, arr2, False)[1]
+    # p_value = stats.mannwhitneyu(arr1, arr2)[1]
     return p_value
