@@ -79,8 +79,8 @@ class Store:
 
     def test_and_fix(self):
         for i in self.same:
-            p_value_same = stats.ttest_ind([word.normalized_features[i] for word in self.first_list_output],
-                                           [word.normalized_features[i] for word in self.second_list_output])[1]
+            p_value_same = test([word.normalized_features[i] for word in self.first_list_output],
+                                [word.normalized_features[i] for word in self.second_list_output])
 
             if p_value_same < 0.1:
                 first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
@@ -100,8 +100,8 @@ class Store:
                     self.second_list_output.append(self.second_list[hhh])
 
                 for k in self.same:
-                    p_value_same = stats.ttest_ind([noun.normalized_features[k] for noun in self.first_list_output],
-                                                   [noun.normalized_features[k] for noun in self.second_list_output])[1]
+                    p_value_same = test([word.normalized_features[k] for word in self.first_list_output],
+                                        [word.normalized_features[k] for word in self.second_list_output])
 
                     if p_value_same < 0.05:
                         self.allow = False
@@ -207,3 +207,17 @@ def compensate(higher, lower, i):
             second_list_index = j
 
     return first_list_index, second_list_index
+
+
+def test(arr1, arr2):
+    shapiro_first = stats.shapiro(arr1)[1]
+    shapiro_second = stats.shapiro(arr2)[1]
+    if shapiro_first < 0.05 or shapiro_second < 0.05:
+        p_value = stats.mannwhitneyu(arr1, arr2)[1]
+    else:
+        levene = stats.levene(arr1, arr2)[1]
+        if levene < 0.05:
+            p_value = stats.ttest_ind(arr1, arr2, False)[1]
+        else:
+            p_value = stats.ttest_ind(arr1, arr2)[1]
+    return p_value
