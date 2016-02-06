@@ -210,14 +210,14 @@ def compensate(higher, lower, i):
 
 
 def test(arr1, arr2):
-    shapiro_first = stats.shapiro(arr1)[1]
-    shapiro_second = stats.shapiro(arr2)[1]
-    if shapiro_first < 0.05 or shapiro_second < 0.05:
-        p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    else:
-        levene = stats.levene(arr1, arr2)[1]
-        if levene < 0.05:
-            p_value = stats.ttest_ind(arr1, arr2, False)[1]
-        else:
-            p_value = stats.ttest_ind(arr1, arr2)[1]
+    # shapiro_first = stats.shapiro(arr1)[1]
+    # shapiro_second = stats.shapiro(arr2)[1]
+    # if shapiro_first < 0.05 or shapiro_second < 0.05:
+    #     p_value = stats.mannwhitneyu(arr1, arr2)[1]
+    # else:
+    #     # levene = stats.levene(arr1, arr2)[1]
+    #     # if levene < 0.05:
+    #     #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
+    #     # else:
+    p_value = stats.ttest_ind(arr1, arr2)[1]
     return p_value

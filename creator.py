@@ -30,6 +30,21 @@ while newStore.sharp():
         if len(newStore.first_list_output) > 15:
             newStore.test_and_fix()
 
+
+def test(arr1, arr2):
+    shapiro_first = stats.shapiro(arr1)[1]
+    shapiro_second = stats.shapiro(arr2)[1]
+    if shapiro_first < 0.05 or shapiro_second < 0.05:
+        p_value = stats.mannwhitneyu(arr1, arr2)[1]
+    else:
+        # levene = stats.levene(arr1, arr2)[1]
+        # if levene < 0.05:
+        #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
+        # else:
+        p_value = stats.ttest_ind(arr1, arr2)[1]
+    return p_value
+
+
 print len(newStore.first_list_output), len(newStore.second_list_output)
 
 print '\n######################################\n'
@@ -41,16 +56,19 @@ print '\n######################################\n'
 #     print newStore.second_list_output[i].name
 
 for i in newStore.same:
-    p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.first_list_output],
-                                   [word.normalized_features[i] for word in newStore.second_list_output], False)[1]
+    # p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.first_list_output],
+    #                                [word.normalized_features[i] for word in newStore.second_list_output], False)[1]
+
+    p_value_same = test([word.normalized_features[i] for word in newStore.first_list_output],
+                        [word.normalized_features[i] for word in newStore.second_list_output])
 
     # p_mann = stats.mannwhitneyu([word.normalized_features[i] for word in newStore.first_list_output],
     #                             [word.normalized_features[i] for word in newStore.second_list_output])[1]
 
-    levene = stats.levene([word.normalized_features[i] for word in newStore.first_list_output],
-                          [word.normalized_features[i] for word in newStore.second_list_output])[1]
+    # levene = stats.levene([word.normalized_features[i] for word in newStore.first_list_output],
+    #                       [word.normalized_features[i] for word in newStore.second_list_output])[1]
     # print '\n##################\n'
-    print p_value_same, levene
+    print p_value_same
 
     # print '\n###\n'
     # shapiro_first = stats.shapiro([word.normalized_features[i] for word in newStore.first_list_output])
