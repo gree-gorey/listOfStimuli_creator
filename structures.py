@@ -3,7 +3,6 @@
 import random
 import codecs
 import zipfile
-import numpy
 from scipy import stats
 
 __author__ = 'Gree-gorey'
@@ -25,6 +24,8 @@ class Store:
         self.allow = True
         self.same = []
         self.statistics = None
+        self.differ = 0
+        self.which_higher = None
 
     def read_verbs(self, f):
         for line in f:
@@ -118,6 +119,30 @@ class Store:
 
                     if p_value_same < 0.05:
                         self.allow = False
+
+    def high_low(self, high, low):
+        high_sorted = sorted(high, reverse=True)
+        low_sorted = sorted(low, reverse=False)
+        stop = min(len(high_sorted), len(low_sorted))
+        high_stop = high_sorted[0]
+        low_stop = low_sorted[0]
+        i = 0
+        high = []
+        low = []
+        while high_stop > low_stop and stop > i:
+            high.append(high_sorted[i])
+            low.append(low_sorted[i])
+        return high, low
+
+    def differentiate(self):
+        for word in self.first_list:
+            word.diff = self.differ - 1
+        for word in self.second_list:
+            word.diff = self.differ - 1
+        if self.which_higher == 1:
+            self.first_list, self.second_list = self.high_low(self.first_list, self.second_list)
+        elif self.which_higher == 2:
+            self.second_list, self.first_list = self.high_low(self.second_list, self.first_list)
 
     def create_list_from_to_choose(self, a_list):
         new_list = []

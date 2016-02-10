@@ -26,13 +26,13 @@ class Parameters:
         self.first_list = None
         self.second_list = None
         self.length = 800
-        self.differ = None
+        self.differ = 0
         self.statistics = None
         self.same = []
 
-    def get_same(self):
+    def get_same(self, store):
         for i in xrange(9):
-            if i != self.differ - 1:
+            if i != store.differ - 1:
                 self.same.append(i)
 
     def get_parameters(self, store):
@@ -69,7 +69,28 @@ class Parameters:
         store.first_list = store.create_list_from_to_choose(self.first_list)
         store.second_list = store.create_list_from_to_choose(self.second_list)
 
-        print u'\nNow length of the lists you are choosing from:\n' \
+        store.differ = input(u'\n0 - the lists are not supposed to be different\n'
+                             u'they should differ in:\n'
+                            u'1 - Name agreement\n'
+                            u'2 - Subjective visual complexity\n'
+                            u'3 - Familiarity\n'
+                            u'4 - Age of acquisition\n'
+                            u'5 - Imageability\n'
+                            u'6 - Image agreement\n'
+                            u'7 - Frequency\n'
+                            u'8 - Syllables length\n'
+                            u'9 - Phonemes length\n'
+                            u'Specify: ')
+
+        if store.differ != 0:
+            store.which_higher = input(u'\n1 - first list\n'
+                                       u'2 - second list\n'
+                                       u'Which of the lists is supposed to have higher values:')
+            store.differentiate()
+
+        self.get_same(store)
+
+        print u'\nNow length of the lists you are choosing from is:\n' \
               u'first list - ' + str(len(store.first_list)) + u' words\n' \
               u'second list - ' + str(len(store.second_list)) + u' words\n' \
               u'Please, do not exceed these numbers'
@@ -78,21 +99,6 @@ class Parameters:
             self.length = input(u'\nSpecify the size of the lists (in words): ')
             if self.length > min(len(store.first_list), len(store.second_list)):
                 print u'This is too much. Try again'
-
-        self.differ = input(u'\n0 - the lists are not supposed to be different\n'
-                                u'they should differ in:\n'
-                                u'1 - Name agreement\n'
-                                u'2 - Subjective visual complexity\n'
-                                u'3 - Familiarity\n'
-                                u'4 - Age of acquisition\n'
-                                u'5 - Imageability\n'
-                                u'6 - Image agreement\n'
-                                u'7 - Frequency\n'
-                                u'8 - Syllables length\n'
-                                u'9 - Phonemes length\n'
-                                u'Specify: ')
-
-        self.get_same()
 
         self.statistics = input(u'\n1 - Student\'s t-test\n'
                                      u'2 - Welch\'s t-test\n'
