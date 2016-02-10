@@ -112,10 +112,10 @@ class Store:
                     if p_value_same < 0.05:
                         self.allow = False
 
-    def setup_parameters(self, same, length, instr=None, part=None, arg=None):
+    def setup_parameters(self, parameters):
         self.same = same
         self.number_of_same = len(same)
-        self.length = length
+        self.length = parameters.length
         if instr:
             for verb in self.verbs:
                 if verb.instr:

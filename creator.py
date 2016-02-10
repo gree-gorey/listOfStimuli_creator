@@ -3,11 +3,11 @@
 import time
 import pickle
 from scipy import stats
+from face import Parameters
 
 __author__ = 'Gree-gorey'
 
 t1 = time.time()
-
 
 with open(u'/home/gree-gorey/stimdb/store.p', u'r') as f:
     newStore = pickle.load(f)
@@ -17,7 +17,11 @@ same = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 # different = 7
 length = 100
 
-newStore.setup_parameters(same, length, arg=2, part=2)
+p = Parameters()
+p.get_parameters()
+
+# newStore.setup_parameters(same, length, arg=2, part=2)
+newStore.setup_parameters(p)
 
 
 while newStore.sharp():
