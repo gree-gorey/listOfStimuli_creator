@@ -3,6 +3,7 @@
 import random
 import codecs
 import zipfile
+import numpy
 from scipy import stats
 
 __author__ = 'Gree-gorey'
@@ -23,6 +24,7 @@ class Store:
         self.number_of_same = 0
         self.allow = True
         self.same = []
+        self.statistics = None
 
     def read_verbs(self, f):
         for line in f:
@@ -30,18 +32,23 @@ class Store:
             self.verbs.append(Word())
             self.verbs[-1].name = line[0]
             self.verbs[-1].features = [float(x) for x in line[1:10:]]
-            self.verbs[-1].arg = int(line[10])
+            self.verbs[-1].arg = True if u'1' in line[10] else False
             self.verbs[-1].reflexive = True if u'+' in line[11] else False
             self.verbs[-1].instr = True if u'+' in line[12] else False
             self.verbs[-1].name_rel = True if u'+' in line[13] else False
+            self.verbs[-1].vector = [self.verbs[-1].arg,
+                                     self.verbs[-1].reflexive,
+                                     self.verbs[-1].instr,
+                                     self.verbs[-1].name_rel]
 
     def read_nouns(self, f):
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
             self.nouns.append(Word())
-            self.nouns[-1].part = int(line[0])
+            self.nouns[-1].part = True if u'1' in line[0] else False
             self.nouns[-1].name = line[1]
             self.nouns[-1].features = [float(x) for x in line[2::]]
+            self.nouns[-1].vector = [self.nouns[-1].part]
 
     def find_min_max(self, arr):
         j = 0
@@ -112,33 +119,36 @@ class Store:
                     if p_value_same < 0.05:
                         self.allow = False
 
-    def setup_parameters(self, parameters):
-        self.same = same
-        self.number_of_same = len(same)
-        self.length = parameters.length
-        if instr:
+    def create_list_from_to_choose(self, a_list):
+        new_list = []
+        if a_list.pos == 1:
             for verb in self.verbs:
-                if verb.instr:
-                    self.first_list.append(verb)
-        elif arg:
-            for verb in self.verbs:
-                if verb.arg == arg:
-                    self.first_list.append(verb)
-        else:
-            self.first_list += self.verbs
-        if part:
+                print verb.vector
+                print numpy.logical_and(a_list.vector, verb.vector)
+                if sum(numpy.logical_and(a_list.vector, verb.vector)) == 4:
+                    new_list.append(verb)
+        elif a_list.pos == 2:
             for noun in self.nouns:
-                if noun.part == 1:
-                    self.second_list.append(noun)
-        else:
-            self.second_list += self.nouns
+                print noun.vector
+                print numpy.logical_and(a_list.vector, noun.vector)
+                if sum(numpy.logical_and(a_list.vector, noun.vector)) == 1:
+                    new_list.append(noun)
+        return new_list
+
+    def setup_parameters(self, parameters):
+        self.same = parameters.same
+        self.number_of_same = len(self.same)
+        self.length = parameters.length
+        self.statistics = parameters.statistics
+        self.first_list = self.create_list_from_to_choose(parameters.first_list)
+        self.second_list = self.create_list_from_to_choose(parameters.second_list)
         # print len(self.first_list), len(self.second_list)
         self.normalize()
         for word in self.first_list:
-            word.same = [word.normalized_features[i] for i in same]
+            word.same = [word.normalized_features[i] for i in self.same]
             # word.diff = word.normalized_features[different]
         for word in self.second_list:
-            word.same = [word.normalized_features[i] for i in same]
+            word.same = [word.normalized_features[i] for i in self.same]
 
     def add_first(self):
         self.first_list += self.first_list_output
@@ -205,6 +215,7 @@ class Word:
         self.same = 0
         self.diff = 0
         self.distance = 1
+        self.vector = []
 
     def __gt__(self, other):
         return self.diff > other.diff

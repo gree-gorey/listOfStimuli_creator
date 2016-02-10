@@ -12,13 +12,15 @@ t1 = time.time()
 with open(u'/home/gree-gorey/stimdb/store.p', u'r') as f:
     newStore = pickle.load(f)
 
-same = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-# same = [1, 2, 8, 9]
-# different = 7
-length = 100
+# same = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+# # same = [1, 2, 8, 9]
+# # different = 7
+# length = 100
 
 p = Parameters()
 p.get_parameters()
+
+print p.first_list.vector, p.second_list.vector
 
 # newStore.setup_parameters(same, length, arg=2, part=2)
 newStore.setup_parameters(p)
