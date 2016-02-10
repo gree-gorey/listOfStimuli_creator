@@ -12,29 +12,20 @@ class List:
         self.instrumentality = None
         self.relation = None
         self.same = None
-        self.vector = [True]
+        self.vector = []
 
     def get_vector(self):
         if self.pos == 1:
-            self.vector = [True, True, True, True]
-            if self.arguments == 1:
-                self.vector[0] = False
-            if self.reflexivity == 1:
-                self.vector[1] = False
-            if self.instrumentality == 1:
-                self.vector[2] = False
-            if self.relation == 1:
-                self.vector[3] = False
+            self.vector = [self.arguments, self.reflexivity, self.instrumentality, self.relation]
         elif self.pos == 2:
-            if self.part == 1:
-                self.vector[0] = False
+            self.vector = [self.part]
 
 
 class Parameters:
     def __init__(self):
         self.first_list = None
         self.second_list = None
-        self.length = None
+        self.length = 800
         self.differ = None
         self.statistics = None
         self.same = []
@@ -44,7 +35,7 @@ class Parameters:
             if i != self.differ - 1:
                 self.same.append(i)
 
-    def get_parameters(self):
+    def get_parameters(self, store):
         print u'Please, specify the parameters for the 1st list:'
         self.first_list = List()
 
@@ -75,7 +66,18 @@ class Parameters:
 
         self.second_list.get_vector()
 
-        self.length = input(u'\nSpecify the size of the lists (in words): ')
+        store.first_list = store.create_list_from_to_choose(self.first_list)
+        store.second_list = store.create_list_from_to_choose(self.second_list)
+
+        print u'\nNow length of the lists you are choosing from:\n' \
+              u'first list - ' + str(len(store.first_list)) + u' words\n' \
+              u'second list - ' + str(len(store.second_list)) + u' words\n' \
+              u'Please, do not exceed these numbers'
+
+        while self.length > min(len(store.first_list), len(store.second_list)):
+            self.length = input(u'\nSpecify the size of the lists (in words): ')
+            if self.length > min(len(store.first_list), len(store.second_list)):
+                print u'This is too much. Try again'
 
         self.differ = input(u'\n0 - the lists are not supposed to be different\n'
                                 u'they should differ in:\n'

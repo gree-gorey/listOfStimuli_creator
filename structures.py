@@ -32,10 +32,10 @@ class Store:
             self.verbs.append(Word())
             self.verbs[-1].name = line[0]
             self.verbs[-1].features = [float(x) for x in line[1:10:]]
-            self.verbs[-1].arg = True if u'1' in line[10] else False
-            self.verbs[-1].reflexive = True if u'+' in line[11] else False
-            self.verbs[-1].instr = True if u'+' in line[12] else False
-            self.verbs[-1].name_rel = True if u'+' in line[13] else False
+            self.verbs[-1].arg = 1 if u'1' in line[10] else 0.5
+            self.verbs[-1].reflexive = 1 if u'+' in line[11] else 0.5
+            self.verbs[-1].instr = 1 if u'+' in line[12] else 0.5
+            self.verbs[-1].name_rel = 1 if u'+' in line[13] else 0.5
             self.verbs[-1].vector = [self.verbs[-1].arg,
                                      self.verbs[-1].reflexive,
                                      self.verbs[-1].instr,
@@ -45,7 +45,7 @@ class Store:
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
             self.nouns.append(Word())
-            self.nouns[-1].part = True if u'1' in line[0] else False
+            self.nouns[-1].part = 1 if u'1' in line[0] else 0.5
             self.nouns[-1].name = line[1]
             self.nouns[-1].features = [float(x) for x in line[2::]]
             self.nouns[-1].vector = [self.nouns[-1].part]
@@ -88,7 +88,7 @@ class Store:
 
     def test_and_fix(self):
         for i in self.same:
-            p_value_same = test([word.normalized_features[i] for word in self.first_list_output],
+            p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
                                 [word.normalized_features[i] for word in self.second_list_output])
 
             if p_value_same < 0.1:
@@ -113,7 +113,7 @@ class Store:
                     del self.second_list[hhh]
 
                 for k in self.same:
-                    p_value_same = test([word.normalized_features[k] for word in self.first_list_output],
+                    p_value_same = self.test([word.normalized_features[k] for word in self.first_list_output],
                                         [word.normalized_features[k] for word in self.second_list_output])
 
                     if p_value_same < 0.05:
@@ -123,15 +123,11 @@ class Store:
         new_list = []
         if a_list.pos == 1:
             for verb in self.verbs:
-                print verb.vector
-                print numpy.logical_and(a_list.vector, verb.vector)
-                if sum(numpy.logical_and(a_list.vector, verb.vector)) == 4:
+                if is_match(a_list.vector, verb.vector):
                     new_list.append(verb)
         elif a_list.pos == 2:
             for noun in self.nouns:
-                print noun.vector
-                print numpy.logical_and(a_list.vector, noun.vector)
-                if sum(numpy.logical_and(a_list.vector, noun.vector)) == 1:
+                if is_match(a_list.vector, noun.vector):
                     new_list.append(noun)
         return new_list
 
@@ -140,8 +136,8 @@ class Store:
         self.number_of_same = len(self.same)
         self.length = parameters.length
         self.statistics = parameters.statistics
-        self.first_list = self.create_list_from_to_choose(parameters.first_list)
-        self.second_list = self.create_list_from_to_choose(parameters.second_list)
+        # self.first_list = self.create_list_from_to_choose(parameters.first_list)
+        # self.second_list = self.create_list_from_to_choose(parameters.second_list)
         # print len(self.first_list), len(self.second_list)
         self.normalize()
         for word in self.first_list:
@@ -201,6 +197,15 @@ class Store:
     def equal(self):
         return len(self.first_list_output) == self.length
 
+    def test(self, arr1, arr2):
+        if self.statistics == 1:
+            p_value = stats.ttest_ind(arr1, arr2)[1]
+        elif self.statistics == 2:
+            p_value = stats.ttest_ind(arr1, arr2, False)[1]
+        elif self.statistics == 3:
+            p_value = stats.mannwhitneyu(arr1, arr2)[1]
+        return p_value
+
 
 class Word:
     def __init__(self):
@@ -249,16 +254,8 @@ def compensate(higher, lower, i):
     return first_list_index, second_list_index
 
 
-def test(arr1, arr2):
-    # shapiro_first = stats.shapiro(arr1)[1]
-    # shapiro_second = stats.shapiro(arr2)[1]
-    # if shapiro_first < 0.05 or shapiro_second < 0.05:
-    #     p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    # else:
-    #     # levene = stats.levene(arr1, arr2)[1]
-    #     # if levene < 0.05:
-    #     #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
-    #     # else:
-    p_value = stats.ttest_ind(arr1, arr2, False)[1]
-    # p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    return p_value
+def is_match(one, other):
+    for item in [a*b for a, b in zip(one, other)]:
+        if item != 1 and item != 0:
+            return False
+    return True

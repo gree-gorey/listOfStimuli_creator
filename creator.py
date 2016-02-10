@@ -7,23 +7,17 @@ from face import Parameters
 
 __author__ = 'Gree-gorey'
 
-t1 = time.time()
-
 with open(u'/home/gree-gorey/stimdb/store.p', u'r') as f:
     newStore = pickle.load(f)
 
-# same = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-# # same = [1, 2, 8, 9]
-# # different = 7
-# length = 100
-
 p = Parameters()
-p.get_parameters()
+p.get_parameters(newStore)
 
 print p.first_list.vector, p.second_list.vector
 
-# newStore.setup_parameters(same, length, arg=2, part=2)
 newStore.setup_parameters(p)
+
+t1 = time.time()
 
 
 while newStore.sharp():
@@ -36,21 +30,6 @@ while newStore.sharp():
         newStore.add_closest()
         if len(newStore.first_list_output) > 15:
             newStore.test_and_fix()
-
-
-def test(arr1, arr2):
-    # shapiro_first = stats.shapiro(arr1)[1]
-    # shapiro_second = stats.shapiro(arr2)[1]
-    # if shapiro_first < 0.05 or shapiro_second < 0.05:
-    #     p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    # else:
-    #     # levene = stats.levene(arr1, arr2)[1]
-    #     # if levene < 0.05:
-    #     #     p_value = stats.ttest_ind(arr1, arr2, False)[1]
-    #     # else:
-    p_value = stats.ttest_ind(arr1, arr2, False)[1]
-    # p_value = stats.mannwhitneyu(arr1, arr2)[1]
-    return p_value
 
 
 print len(newStore.first_list_output), len(newStore.second_list_output)
@@ -68,8 +47,8 @@ for i in newStore.same:
     # p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.first_list_output],
     #                                [word.normalized_features[i] for word in newStore.second_list_output], False)[1]
 
-    p_value_same = test([word.normalized_features[i] for word in newStore.first_list_output],
-                        [word.normalized_features[i] for word in newStore.second_list_output])
+    p_value_same = newStore.test([word.normalized_features[i] for word in newStore.first_list_output],
+                                 [word.normalized_features[i] for word in newStore.second_list_output])
 
     # p_mann = stats.mannwhitneyu([word.normalized_features[i] for word in newStore.first_list_output],
     #                             [word.normalized_features[i] for word in newStore.second_list_output])[1]
