@@ -132,13 +132,20 @@ class Store:
         while high_stop > low_stop and stop > i:
             high.append(high_sorted[i])
             low.append(low_sorted[i])
+            high_stop = high_sorted[i]
+            low_stop = low_sorted[i]
+            i += 1
+        print len(high), len(low), 777
         return high, low
 
     def differentiate(self):
+        self.normalize()
         for word in self.first_list:
-            word.diff = self.differ - 1
+            # print len(word.normalized_features)
+            # print self.differ
+            word.diff = word.normalized_features[self.differ - 1]  # поменяй на нормализованные!!!!
         for word in self.second_list:
-            word.diff = self.differ - 1
+            word.diff = word.normalized_features[self.differ - 1]
         if self.which_higher == 1:
             self.first_list, self.second_list = self.high_low(self.first_list, self.second_list)
         elif self.which_higher == 2:
@@ -164,7 +171,6 @@ class Store:
         # self.first_list = self.create_list_from_to_choose(parameters.first_list)
         # self.second_list = self.create_list_from_to_choose(parameters.second_list)
         # print len(self.first_list), len(self.second_list)
-        self.normalize()
         for word in self.first_list:
             word.same = [word.normalized_features[i] for i in self.same]
             # word.diff = word.normalized_features[different]

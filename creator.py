@@ -2,7 +2,6 @@
 
 import time
 import pickle
-from scipy import stats
 from face import Parameters
 
 __author__ = 'Gree-gorey'
@@ -43,7 +42,8 @@ print '\n######################################\n'
 # for i in xrange(6):
 #     print newStore.second_list_output[i].name
 
-for i in newStore.same:
+# for i in newStore.same:
+for i in xrange(9):
     # p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.first_list_output],
     #                                [word.normalized_features[i] for word in newStore.second_list_output], False)[1]
 
@@ -65,6 +65,14 @@ for i in newStore.same:
 
 print '\n######################################\n'
 
+i = newStore.differ - 1
+if i != 0:
+    p_value_differ = newStore.test([word.normalized_features[i] for word in newStore.first_list_output],
+                                   [word.normalized_features[i] for word in newStore.second_list_output])
+
+print p_value_differ
+
+print '\n######################################\n'
 # with codecs.open(u'/home/gree-gorey/stimdb/first_list.csv', u'w', u'utf-8') as w:
 #     for word in newStore.first_list_output:
 #         w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
