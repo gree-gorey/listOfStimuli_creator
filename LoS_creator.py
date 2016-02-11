@@ -172,32 +172,27 @@ class Window(QWidget):
         # завершаем ЛИСТ 2
         groupBox2.setLayout(vbox)
 
-
         def go():
             self.close()
             # print arguments_list1.currentIndex()
             # pass
             # print cb.checkState(), button_group.checkedId()
 
-
-
-
-
         # Add a button
         btn = QPushButton(u'Далее >')
         btn.setToolTip(u'Нажмите, чтобы составить листы')
         btn.clicked.connect(go)
-        btn.resize(btn.sizeHint())
+        # btn.resize(btn.sizeHint())
 
+        # добавляем виджеты в грид
         main_layout.addWidget(groupBox, 1, 1)
         main_layout.addWidget(groupBox2, 1, 2)
-        main_layout.addWidget(btn, 2, 2)
+        # main_layout.setColumnStretch(0, 2)
+        main_layout.addWidget(btn, 2, 1, 1, 2)
 
-        # завершаем окно
+        # завершаем создание окна и высвечиваем
         self.setLayout(main_layout)
         self.show()
-
-
 
     def center(self):
         qr = self.frameGeometry()
