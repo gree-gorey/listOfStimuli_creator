@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 
+import time
 import sys
 import pickle
-from face import List, Parameters
-# from structures import Store
+from structures import List, Parameters
 from PyQt4.Qt import *
 
 __author__ = 'Gree-gorey'
@@ -81,49 +81,60 @@ class StatWidget(QWidget):
         self.initUI()
 
     def go(self):
+        print self.statistics.currentIndex()
+        print self.length.text()
+
+        self.parent().parent().parameters.statistics = self.statistics.currentIndex()
+        self.parent().parent().parameters.length = int(self.length.text())
+
         wait = MainWindow(self.parent().parent())
         wait.setCentralWidget(WaitWidget())
         wait.move(600, 350)
         wait.show()
+
+        self.parent().parent().store.setup_parameters(self.parent().parent().parameters)
+
+        t1 = time.time()
 
         success = MainWindow(self.parent().parent())
         success.setCentralWidget(Success())
         success.move(600, 350)
         success.show()
 
+        t2 = time.time()
+
+        print t2 - t1
+
         self.parent().close()
 
     def initUI(self):
-        self.resize(100, 100)
-
         # создаем главный грид
         main_layout = QGridLayout()
-
-        ############
-        # ЛИСТ 1
-        ############
 
         groupBox = QGroupBox()
         vbox = QVBoxLayout()
 
+        # print self.parent().parent()
+
         # пишем предварительную оценку
-        vbox.addWidget(QLabel(u'Параметры установлены.\n\n'
-                              u'Для формирования листов с заданными параметрами\n'
-                              u'Для Листа №1 - из 234 слов\n'
-                              u'Для Листа №2 - из 243 слов\n'))
+        vbox.addWidget(QLabel(u'Параметры установлены.<br>'
+                              u'<br>Для формирования листов с заданными параметрами'
+                              u'<br>Для Листа №1 - ' + str(len(self.parent().parent().store.first_list)) + u' слов'
+                              u'<br>Для Листа №2 - ' + str(len(self.parent().parent().store.second_list)) + u' слов<br>'))
 
         # выбираем размер листа
         vbox.addWidget(QLabel(u'Выберите размер листа'))
-        self.field = QLineEdit()
-        vbox.addWidget(self.field)
+        self.length = QLineEdit()
+        vbox.addWidget(self.length)
 
         # уточняем кол-во аргументов
         vbox.addWidget(QLabel(u'Выберите статичтический тест'))
-        arguments_list1 = QComboBox()
-        arguments_list1.addItem(u'Student\'s t-test')
-        arguments_list1.addItem(u'Welch\'s t-test')
-        arguments_list1.addItem(u'Manna-Whitney U test')
-        vbox.addWidget(arguments_list1)
+        self.statistics = QComboBox()
+        self.statistics.addItem(u'-- не выбрано --')
+        self.statistics.addItem(u'Student\'s t-test')
+        self.statistics.addItem(u'Welch\'s t-test')
+        self.statistics.addItem(u'Manna-Whitney U test')
+        vbox.addWidget(self.statistics)
 
         # завершаем ЛИСТ 1
         groupBox.setLayout(vbox)
@@ -150,17 +161,16 @@ class TwoListsWidget(QWidget):
 
     def go(self):
         # add parameters
-        print self.list_1_pos.checkedId()
-        print self.arguments_list1.currentIndex()
-        print self.reflexivity_list1.currentIndex()
-        print self.instrumentality_list1.currentIndex()
-        print self.relation_list1.currentIndex()
-        print self.part_list1.currentIndex()
+        # print self.list_1_pos.checkedId()
+        # print self.arguments_list1.currentIndex()
+        # print self.reflexivity_list1.currentIndex()
+        # print self.instrumentality_list1.currentIndex()
+        # print self.relation_list1.currentIndex()
+        # print self.part_list1.currentIndex()
 
         # добавляем параметры первого листа
         self.parent().parent().parameters.first_list = List()
         self.parent().parent().parameters.first_list.pos = self.list_1_pos.checkedId()
-
         if self.parent().parent().parameters.first_list.pos == 1:
             self.parent().parent().parameters.first_list.arguments = self.arguments_list1.currentIndex()
             self.parent().parent().parameters.first_list.reflexivity = self.reflexivity_list1.currentIndex()
@@ -168,20 +178,18 @@ class TwoListsWidget(QWidget):
             self.parent().parent().parameters.first_list.relation = self.relation_list1.currentIndex()
         elif self.parent().parent().parameters.first_list.pos == 2:
             self.parent().parent().parameters.first_list.part = self.part_list1.currentIndex()
-
         self.parent().parent().parameters.first_list.get_vector()
 
-        print self.list_2_pos.checkedId()
-        print self.arguments_list2.currentIndex()
-        print self.reflexivity_list2.currentIndex()
-        print self.instrumentality_list2.currentIndex()
-        print self.relation_list2.currentIndex()
-        print self.part_list2.currentIndex()
+        # print self.list_2_pos.checkedId()
+        # print self.arguments_list2.currentIndex()
+        # print self.reflexivity_list2.currentIndex()
+        # print self.instrumentality_list2.currentIndex()
+        # print self.relation_list2.currentIndex()
+        # print self.part_list2.currentIndex()
 
         # добавляем параметры второго листа
         self.parent().parent().parameters.second_list = List()
         self.parent().parent().parameters.second_list.pos = self.list_2_pos.checkedId()
-
         if self.parent().parent().parameters.second_list.pos == 1:
             self.parent().parent().parameters.second_list.arguments = self.arguments_list2.currentIndex()
             self.parent().parent().parameters.second_list.reflexivity = self.reflexivity_list2.currentIndex()
@@ -189,19 +197,36 @@ class TwoListsWidget(QWidget):
             self.parent().parent().parameters.second_list.relation = self.relation_list2.currentIndex()
         elif self.parent().parent().parameters.second_list.pos == 2:
             self.parent().parent().parameters.second_list.part = self.part_list2.currentIndex()
-
         self.parent().parent().parameters.second_list.get_vector()
 
+        # создаем в сторе предварительные листы
         self.parent().parent().store.first_list = \
             self.parent().parent().store.create_list_from_to_choose(self.parent().parent().parameters.first_list)
         self.parent().parent().store.second_list = \
             self.parent().parent().store.create_list_from_to_choose(self.parent().parent().parameters.second_list)
 
-        new = MainWindow(self.parent().parent())
-        new.setCentralWidget(StatWidget())
-        new.move(600, 350)
-        new.show()
+        # проверяем, должны ли различаться
+        if self.differ_radio.checkedId() == 1:
+            self.parent().parent().store.differ = self.diff_parameter.currentIndex()
+            self.parent().parent().store.which_higher = self.higher.currentIndex()
+            self.parent().parent().store.differentiate()
+
+        # создаем вектор одинаковых
+        self.parent().parent().parameters.get_same(self.parent().parent().store)
+
+        print self.differ_radio.checkedId()
+        print self.diff_parameter.currentIndex()
+        print self.higher.currentIndex()
+        print self.parent().parent().parameters.same
+
+        stat = MainWindow(self.parent().parent())
+        stat.setCentralWidget(StatWidget(stat))
+        stat.move(600, 350)
+        stat.show()
         self.parent().close()
+
+        # print self.parent().parent()
+        # print self.parent().parent()
 
     def initUI(self):
         # self.resize(500, 500)
@@ -368,28 +393,35 @@ class TwoListsWidget(QWidget):
         vbox = QVBoxLayout()
 
         # выбор части речи
-        differ = QRadioButton(u'Листы не должны отличаться')
-        no_differ = QRadioButton(u'Листы должны отличаться на параметр:')
-        differ_radio = QButtonGroup()
-        differ_radio.addButton(differ, 1)
-        differ_radio.addButton(no_differ, 2)
+        no_differ = QRadioButton(u'Листы не должны отличаться')
+        differ = QRadioButton(u'Листы должны отличаться на параметр:')
+        self.differ_radio = QButtonGroup()
+        self.differ_radio.addButton(no_differ, 0)
+        self.differ_radio.addButton(differ, 1)
 
-        vbox.addWidget(differ)
         vbox.addWidget(no_differ)
+        vbox.addWidget(differ)
 
         # выбор дифф парамтра
-        diff_parameter = QComboBox()
-        diff_parameter.addItem(u'-- не задан --')
-        diff_parameter.addItem(u'частотность')
-        diff_parameter.addItem(u'длина')
-        vbox.addWidget(diff_parameter)
+        self.diff_parameter = QComboBox()
+        self.diff_parameter.addItem(u'-- не задан --')
+        self.diff_parameter.addItem(u'1 -Устойчивость номинации')
+        self.diff_parameter.addItem(u'Субъективная сложность')
+        self.diff_parameter.addItem(u'Знакомство с объектом')
+        self.diff_parameter.addItem(u'Возраст усвоения')
+        self.diff_parameter.addItem(u'Представимость')
+        self.diff_parameter.addItem(u'Схожесть образа с рисунком')
+        self.diff_parameter.addItem(u'Частотность')
+        self.diff_parameter.addItem(u'Длина в слогах')
+        self.diff_parameter.addItem(u'9 - Длина в фонемах')
+        vbox.addWidget(self.diff_parameter)
 
         # выбор высоких значений
-        higher = QComboBox()
-        higher.addItem(u'-- не задан --')
-        higher.addItem(u'Высокие значения у Листа №1')
-        higher.addItem(u'Высокие значения у Листа №2')
-        vbox.addWidget(higher)
+        self.higher = QComboBox()
+        self.higher.addItem(u'-- не задан --')
+        self.higher.addItem(u'Высокие значения у Листа №1')
+        self.higher.addItem(u'Высокие значения у Листа №2')
+        vbox.addWidget(self.higher)
 
         groupBox3.setLayout(vbox)
 

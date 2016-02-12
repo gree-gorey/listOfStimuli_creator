@@ -290,3 +290,36 @@ def is_match(one, other):
         if item != 1 and item != 0:
             return False
     return True
+
+
+class List:
+    def __init__(self):
+        self.pos = None
+        self.part = None
+        self.arguments = None
+        self.reflexivity = None
+        self.instrumentality = None
+        self.relation = None
+        self.same = None
+        self.vector = []
+
+    def get_vector(self):
+        if self.pos == 1:
+            self.vector = [self.arguments, self.reflexivity, self.instrumentality, self.relation]
+        elif self.pos == 2:
+            self.vector = [self.part]
+
+
+class Parameters:
+    def __init__(self):
+        self.first_list = None
+        self.second_list = None
+        self.length = 800
+        self.differ = 0
+        self.statistics = None
+        self.same = []
+
+    def get_same(self, store):
+        for i in xrange(9):
+            if i != store.differ - 1:
+                self.same.append(i)

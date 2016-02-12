@@ -2,21 +2,8 @@
 
 import time
 import pickle
-from face import Parameters
 
 __author__ = 'Gree-gorey'
-
-with open(u'/home/gree-gorey/stimdb/store.p', u'r') as f:
-    newStore = pickle.load(f)
-
-p = Parameters()
-p.get_parameters(newStore)
-
-print p.first_list.vector, p.second_list.vector
-
-newStore.setup_parameters(p)
-
-t1 = time.time()
 
 
 while newStore.sharp():
