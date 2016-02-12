@@ -36,36 +36,6 @@ class Parameters:
                 self.same.append(i)
 
     def get_parameters(self, store):
-        print u'Please, specify the parameters for the 1st list:'
-        self.first_list = List()
-
-        self.first_list.pos = input(u'\n1 - verbs\n2 - nouns\nChoose part of speech: ')
-
-        if self.first_list.pos == 1:
-            self.first_list.arguments = input(u'\n0 - irrelevant\n1 - one argument\n2 - two arguments\nChoose number of arguments: ')
-            self.first_list.reflexivity = input(u'\n0 - irrelevant\n1 - reflexive\n2 - non-reflexive\nChoose reflexivity: ')
-            self.first_list.instrumentality = input(u'\n0 - irrelevant\n1 - instrumental\n2 - non-instrumental\nChoose instrumentality: ')
-            self.first_list.relation = input(u'\n0 - irrelevant\n1 - true \n2 - false\nChoose name relation: ')
-        elif self.first_list.pos == 2:
-            self.first_list.part = input(u'\n0 - irrelevant\n1 - first part \n2 - second part\nChoose the part: ')
-
-        self.first_list.get_vector()
-
-        print u'\nPlease, specify the parameters for the 2st list:'
-        self.second_list = List()
-
-        self.second_list.pos = input(u'\n1 - verbs\n2 - nouns\nChoose part of speech: ')
-
-        if self.second_list.pos == 1:
-            self.second_list.arguments = input(u'\n0 - irrelevant\n1 - one argument\n2 - two arguments\nChoose number of arguments: ')
-            self.second_list.reflexivity = input(u'\n0 - irrelevant\n1 - reflexive\n2 - non-reflexive\nChoose reflexivity: ')
-            self.second_list.instrumentality = input(u'\n0 - irrelevant\n1 - instrumental\n2 - non-instrumental\nChoose instrumentality: ')
-            self.second_list.relation = input(u'\n0 - irrelevant\n1 - true \n2 - false\nChoose name relation: ')
-        elif self.second_list.pos == 2:
-            self.second_list.part = input(u'\n0 - irrelevant\n1 - first part \n2 - second part\nChoose the part: ')
-
-        self.second_list.get_vector()
-
         store.first_list = store.create_list_from_to_choose(self.first_list)
         store.second_list = store.create_list_from_to_choose(self.second_list)
 

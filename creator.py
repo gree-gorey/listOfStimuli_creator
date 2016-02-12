@@ -36,32 +36,11 @@ print len(newStore.first_list), len(newStore.second_list)
 
 print '\n######################################\n'
 
-# p_value_diff = stats.ttest_ind([noun.normalized_features[different] for noun in newStore.first_list_output],
-# [noun.normalized_features[different] for noun in newStore.second_list_output])[1]
-
-# for i in xrange(6):
-#     print newStore.second_list_output[i].name
-
-# for i in newStore.same:
 for i in xrange(9):
-    # p_value_same = stats.ttest_ind([word.normalized_features[i] for word in newStore.first_list_output],
-    #                                [word.normalized_features[i] for word in newStore.second_list_output], False)[1]
-
     p_value_same = newStore.test([word.normalized_features[i] for word in newStore.first_list_output],
                                  [word.normalized_features[i] for word in newStore.second_list_output])
 
-    # p_mann = stats.mannwhitneyu([word.normalized_features[i] for word in newStore.first_list_output],
-    #                             [word.normalized_features[i] for word in newStore.second_list_output])[1]
-
-    # levene = stats.levene([word.normalized_features[i] for word in newStore.first_list_output],
-    #                       [word.normalized_features[i] for word in newStore.second_list_output])[1]
-    # print '\n##################\n'
     print p_value_same
-
-    # print '\n###\n'
-    # shapiro_first = stats.shapiro([word.normalized_features[i] for word in newStore.first_list_output])
-    # shapiro_second = stats.shapiro([word.normalized_features[i] for word in newStore.second_list_output])
-    # print shapiro_first, shapiro_second
 
 print '\n######################################\n'
 
