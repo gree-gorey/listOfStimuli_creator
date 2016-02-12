@@ -6,14 +6,14 @@ from PyQt4.Qt import *
 __author__ = 'Gree-gorey'
 
 
-class NextWidget(QWidget):
+class DifferWidget(QWidget):
     def __init__(self, parent=None):
-        super(NextWidget, self).__init__(parent)
+        super(DifferWidget, self).__init__(parent)
         self.initUI()
 
     def go(self):
         self.close()
-        next = NextWidget()
+        next = DifferWidget()
         next.show()
 
     def initUI(self):
@@ -56,10 +56,6 @@ class NextWidget(QWidget):
         # завершаем ЛИСТ 1
         groupBox.setLayout(vbox)
 
-        # dummy label
-        dl = QLabel(u'          ')
-        dl2 = QLabel(u'          ')
-
         # Add a button
         btn = QPushButton(u'Далее >')
         btn.setToolTip(u'Нажмите, чтобы составить листы')
@@ -67,25 +63,28 @@ class NextWidget(QWidget):
         # btn.resize(btn.sizeHint())
 
         # добавляем виджеты в грид
-        main_layout.addWidget(groupBox, 1, 3, 1, 1)
-        main_layout.addWidget(dl, 1, 1, 1, 2)
-        main_layout.addWidget(dl2, 1, 4, 1, 2)
+        main_layout.addWidget(groupBox, 1, 1)
         # main_layout.setColumnStretch(0, 2)
-        main_layout.addWidget(btn, 2, 3, 1, 1)
+        main_layout.addWidget(btn, 2, 1)
 
         # завершаем создание окна и высвечиваем
         self.setLayout(main_layout)
 
 
-class MyWidget(QWidget):
+class TwoListsWidget(QWidget):
     def __init__(self, parent=None):
-        super(MyWidget, self).__init__(parent)
+        super(TwoListsWidget, self).__init__(parent)
         self.initUI()
 
     def go(self):
-        next = NextWidget(self.parent())
-        self.close()
-        next.parent().setCentralWidget(next)
+        new = MainWindow(self.parent().parent())
+        new.setCentralWidget(DifferWidget())
+        new.show()
+        self.parent().close()
+
+        # next = NextWidget(self.parent())
+        # self.close()
+        # next.parent().setCentralWidget(next)
 
     def initUI(self):
         # self.resize(500, 500)
@@ -275,9 +274,9 @@ class MyWidget(QWidget):
         self.move(qr.topLeft())
 
 
-class NextListsWindow(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, parent=None):
-        super(NextListsWindow, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
         self.initUI()
 
     def go(self):
@@ -287,30 +286,6 @@ class NextListsWindow(QMainWindow):
         # self.resize(500, 500)
         self.center()
         self.setWindowTitle(u'LoS creator 0.1')
-
-        self.setCentralWidget(NextWidget(self))
-
-    def center(self):
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
-
-class TwoListsWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super(TwoListsWindow, self).__init__(parent)
-        self.initUI()
-
-    def go(self):
-        self.close()
-
-    def initUI(self):
-        # self.resize(500, 500)
-        self.center()
-        self.setWindowTitle(u'LoS creator 0.1')
-
-        self.setCentralWidget(MyWidget(self))
 
     def center(self):
         qr = self.frameGeometry()
@@ -325,8 +300,10 @@ class StartWindow(QWidget):
         self.initUI()
 
     def start(self):
-        new = TwoListsWindow(self)
+        new = MainWindow(self)
+        new.setCentralWidget(TwoListsWidget())
         new.show()
+        # TwoListsWindow(self)
         # print arguments_list1.currentIndex()
         # print cb.checkState(), button_group.checkedId()
 
@@ -357,7 +334,6 @@ class StartWindow(QWidget):
         start_btn.clicked.connect(self.start)
         # btn.resize(btn.sizeHint())
 
-        QObject.connect(start_btn, SIGNAL('clicked()'), self.start)
 
         # Add a button
         exit_btn = QPushButton(u'Выход')
