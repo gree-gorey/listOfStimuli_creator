@@ -6,15 +6,56 @@ from PyQt4.Qt import *
 __author__ = 'Gree-gorey'
 
 
-class DifferWidget(QWidget):
+class About(QWidget):
     def __init__(self, parent=None):
-        super(DifferWidget, self).__init__(parent)
+        super(About, self).__init__(parent)
         self.initUI()
 
     def go(self):
-        self.close()
-        next = DifferWidget()
-        next.show()
+        self.parent().close()
+
+    def initUI(self):
+        main_layout = QGridLayout()
+        message = QLabel(u'LoS creator version 0.1\n'
+                         u'author: gree-gorey\n'
+                         u'repository: https://github.com/gree-gorey/listOfStimuli_creator')
+
+        # Add a button
+        btn = QPushButton(u'OK')
+        btn.clicked.connect(self.go)
+        btn.resize(btn.sizeHint())
+
+        main_layout.addWidget(message, 1, 1, 1, 3)
+        main_layout.addWidget(btn, 2, 3, 1, 1)
+
+        self.setLayout(main_layout)
+
+
+class WaitWidget(QWidget):
+    def __init__(self, parent=None):
+        super(WaitWidget, self).__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        main_layout = QGridLayout()
+        message = QLabel(u'\nПожалуйста, подождите.\n'
+                         u'Листы создаются...')
+        message.setAlignment(Qt.AlignHCenter)
+        main_layout.addWidget(message, 1, 1)
+        self.setLayout(main_layout)
+
+
+class StatWidget(QWidget):
+    def __init__(self, parent=None):
+        super(StatWidget, self).__init__(parent)
+        self.initUI()
+
+    def go(self):
+        wait = MainWindow(self.parent().parent().parent())
+        wait.setCentralWidget(WaitWidget())
+        wait.move(600, 350)
+        wait.show()
+        self.parent().close()
 
     def initUI(self):
         self.resize(100, 100)
@@ -29,36 +70,31 @@ class DifferWidget(QWidget):
         groupBox = QGroupBox()
         vbox = QVBoxLayout()
 
-        # выбор части речи
-        verbs = QRadioButton(u'Высокие значения у листа №1')
-        nouns = QRadioButton(u'Высокие значения у листа №2')
-        list_1_pos = QButtonGroup()
-        list_1_pos.addButton(verbs, 1)
-        list_1_pos.addButton(nouns, 2)
-        # label_list1 = QLabel(u'Выберите параметры\n')
-        # label_list1.setAlignment(Qt.AlignHCenter)
-        # vbox.addWidget(label_list1)
+        # пишем предварительную оценку
+        vbox.addWidget(QLabel(u'Параметры установлены.\n\n'
+                              u'Для формирования листов с заданными параметрами\n'
+                              u'Для Листа №1 - из 234 слов\n'
+                              u'Для Листа №2 - из 243 слов\n'))
+
+        # выбираем размер листа
+        vbox.addWidget(QLabel(u'Выберите размер листа'))
+        self.field = QLineEdit()
+        vbox.addWidget(self.field)
 
         # уточняем кол-во аргументов
-        vbox.addWidget(QLabel(u'Выберите параметр, по которому листы должны различаться'))
+        vbox.addWidget(QLabel(u'Выберите статичтический тест'))
         arguments_list1 = QComboBox()
-        arguments_list1.addItem(u'Частотность')
-        arguments_list1.addItem(u'Сложность')
-        arguments_list1.addItem(u'Длина')
+        arguments_list1.addItem(u'Student\'s t-test')
+        arguments_list1.addItem(u'Welch\'s t-test')
+        arguments_list1.addItem(u'Manna-Whitney U test')
         vbox.addWidget(arguments_list1)
-
-        # раздел ГЛАГОЛЫ
-        vbox.addWidget(verbs)
-
-        # раздел СУЩЕСТВИТЕЛЬНЫЕ
-        vbox.addWidget(nouns)
 
         # завершаем ЛИСТ 1
         groupBox.setLayout(vbox)
 
         # Add a button
-        btn = QPushButton(u'Далее >')
-        btn.setToolTip(u'Нажмите, чтобы составить листы')
+        btn = QPushButton(u'Создать листы')
+        btn.setToolTip(u'Нажмите, чтобы начать генерирование')
         btn.clicked.connect(self.go)
         # btn.resize(btn.sizeHint())
 
@@ -78,7 +114,8 @@ class TwoListsWidget(QWidget):
 
     def go(self):
         new = MainWindow(self.parent().parent())
-        new.setCentralWidget(DifferWidget())
+        new.setCentralWidget(StatWidget())
+        new.move(600, 100)
         new.show()
         self.parent().close()
 
@@ -246,9 +283,35 @@ class TwoListsWidget(QWidget):
         # завершаем ЛИСТ 2
         groupBox2.setLayout(vbox)
 
-        # добавляем чек для разных листов
-        cb_differ = QCheckBox(u'Листы должны отличаться на один параметр')
-        # cb_differ.toggled.connect(differ)
+        # добавляем выбор для различающихся
+        groupBox3 = QGroupBox()
+        vbox = QVBoxLayout()
+
+        # выбор части речи
+        differ = QRadioButton(u'Листы не должны отличаться')
+        no_differ = QRadioButton(u'Листы должны отличаться на параметр:')
+        differ_radio = QButtonGroup()
+        differ_radio.addButton(differ, 1)
+        differ_radio.addButton(no_differ, 2)
+
+        vbox.addWidget(differ)
+        vbox.addWidget(no_differ)
+
+        # выбор дифф парамтра
+        diff_parameter = QComboBox()
+        diff_parameter.addItem(u'-- не задан --')
+        diff_parameter.addItem(u'частотность')
+        diff_parameter.addItem(u'длина')
+        vbox.addWidget(diff_parameter)
+
+        # выбор высоких значений
+        higher = QComboBox()
+        higher.addItem(u'-- не задан --')
+        higher.addItem(u'Высокие значения у Листа №1')
+        higher.addItem(u'Высокие значения у Листа №2')
+        vbox.addWidget(higher)
+
+        groupBox3.setLayout(vbox)
 
         # Add a button
         btn = QPushButton(u'Далее >')
@@ -259,7 +322,7 @@ class TwoListsWidget(QWidget):
         # добавляем виджеты в грид
         main_layout.addWidget(groupBox, 1, 1, 1, 2)
         main_layout.addWidget(groupBox2, 1, 3, 1, 2)
-        main_layout.addWidget(cb_differ, 2, 2, 1, 2)
+        main_layout.addWidget(groupBox3, 2, 2, 1, 2)
         # main_layout.setColumnStretch(0, 2)
         main_layout.addWidget(btn, 3, 2, 1, 2)
 
@@ -284,7 +347,8 @@ class MainWindow(QMainWindow):
 
     def initUI(self):
         # self.resize(500, 500)
-        self.center()
+        # self.center()
+        self.move(300, 350)
         self.setWindowTitle(u'LoS creator 0.1')
 
     def center(self):
@@ -294,28 +358,29 @@ class MainWindow(QMainWindow):
         self.move(qr.topLeft())
 
 
-class StartWindow(QWidget):
+class StartWidget(QWidget):
     def __init__(self, parent=None):
-        super(StartWindow, self).__init__(parent)
+        super(StartWidget, self).__init__(parent)
         self.initUI()
 
     def start(self):
-        new = MainWindow(self)
+        new = MainWindow(self.parent())
         new.setCentralWidget(TwoListsWidget())
+        new.move(600, 100)
         new.show()
         # TwoListsWindow(self)
         # print arguments_list1.currentIndex()
         # print cb.checkState(), button_group.checkedId()
 
     def exit_f(self):
-        self.close()
+        self.parent().close()
 
     def about(self):
-        w = QWidget()
-        QMessageBox.about(w, u'About', u'LoS creator version 0.1\n'
-                                       u'author: gree-gorey\n'
-                                       u'repository: https://github.com/gree-gorey/listOfStimuli_creator')
-        self.show()
+        about = MainWindow(self.parent())
+        about.setCentralWidget(About())
+        about.move(600, 350)
+        about.setWindowTitle(u'About')
+        about.show()
 
     def initUI(self):
         self.center()
@@ -384,7 +449,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setApplicationName(u'LoS')
 
-    main = StartWindow()
+    main = MainWindow()
+    main.setCentralWidget(StartWidget(main))
     main.show()
 
     sys.exit(app.exec_())
