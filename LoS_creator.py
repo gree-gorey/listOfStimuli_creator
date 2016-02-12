@@ -6,6 +6,32 @@ from PyQt4.Qt import *
 __author__ = 'Gree-gorey'
 
 
+class Success(QWidget):
+    def __init__(self, parent=None):
+        super(Success, self).__init__(parent)
+        self.initUI()
+
+    def go(self):
+        self.parent().close()
+
+    def initUI(self):
+        main_layout = QGridLayout()
+        message = QLabel(u'Создание листов завершено.'
+                         u'<br>Результаты сохранены в архив <b>results.zip</b>'
+                         u'<br>в папке с программой')
+        message.setOpenExternalLinks(True)
+
+        # Add a button
+        btn = QPushButton(u'OK')
+        btn.clicked.connect(self.go)
+        btn.resize(btn.sizeHint())
+
+        main_layout.addWidget(message, 1, 1, 1, 3)
+        main_layout.addWidget(btn, 2, 3, 1, 1)
+
+        self.setLayout(main_layout)
+
+
 class About(QWidget):
     def __init__(self, parent=None):
         super(About, self).__init__(parent)
@@ -16,9 +42,10 @@ class About(QWidget):
 
     def initUI(self):
         main_layout = QGridLayout()
-        message = QLabel(u'LoS creator version 0.1\n'
-                         u'author: gree-gorey\n'
-                         u'repository: https://github.com/gree-gorey/listOfStimuli_creator')
+        message = QLabel(u'<b>LoS creator</b> version 0.1<br>'
+                         u'Author: gree-gorey<br>'
+                         u'<a href=\"https://github.com/gree-gorey/listOfStimuli_creator\">Repository</a>\n')
+        message.setOpenExternalLinks(True)
 
         # Add a button
         btn = QPushButton(u'OK')
@@ -38,8 +65,8 @@ class WaitWidget(QWidget):
 
     def initUI(self):
         main_layout = QGridLayout()
-        message = QLabel(u'\nПожалуйста, подождите.\n'
-                         u'Листы создаются...')
+        message = QLabel(u'<br>Пожалуйста, подождите.'
+                         u'<br>Листы создаются...')
         message.setAlignment(Qt.AlignHCenter)
         main_layout.addWidget(message, 1, 1)
         self.setLayout(main_layout)
@@ -51,10 +78,16 @@ class StatWidget(QWidget):
         self.initUI()
 
     def go(self):
-        wait = MainWindow(self.parent().parent().parent())
+        wait = MainWindow(self.parent().parent())
         wait.setCentralWidget(WaitWidget())
         wait.move(600, 350)
         wait.show()
+
+        success = MainWindow(self.parent().parent())
+        success.setCentralWidget(Success())
+        success.move(600, 350)
+        success.show()
+
         self.parent().close()
 
     def initUI(self):
@@ -413,7 +446,7 @@ class StartWidget(QWidget):
         # btn.resize(btn.sizeHint())
 
         # Приветствие
-        gr = QLabel(u'Это альфа-версия программы LoS creator\n'
+        gr = QLabel(u'Это альфа-версия программы <b>LoS creator</b><br>'
                     u'Возможны баги')
 
         hbox.addWidget(start_btn)
