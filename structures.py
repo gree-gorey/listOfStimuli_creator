@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import os
 import random
 import codecs
 import zipfile
@@ -26,6 +27,33 @@ class Store:
         self.statistics = None
         self.differ = 0
         self.which_higher = None
+        self.p_values = []
+
+    def generate(self):
+        while self.sharp():
+            self.add_first()
+
+            self.allow = True
+
+            while self.allow and self.less():
+                self.add_closest()
+                if len(self.first_list_output) > 10:
+                    self.test_and_fix()
+
+    def final_statistics(self):
+        for i in xrange(9):
+            p_value = self.test([word.features[i] for word in self.first_list_output],
+                                [word.features[i] for word in self.second_list_output])
+
+            self.p_values.append(p_value)
+
+    def print_results(self):
+        print '\n######################################\n'
+
+        for p in self.p_values:
+            print p
+
+        print '\n######################################\n'
 
     def read_verbs(self, f):
         for line in f:
@@ -52,19 +80,16 @@ class Store:
             self.nouns[-1].vector = [self.nouns[-1].part]
 
     def find_min_max(self, arr):
-        j = 0
         for word in arr:
-            if j == 0:
-                self.min += word.features
-                self.max += word.features
             for i in xrange(len(word.features)):
                 if word.features[i] < self.min[i]:
                     self.min[i] = word.features[i]
                 if word.features[i] > self.max[i]:
                     self.max[i] = word.features[i]
-            j = 1
 
     def normalize(self):
+        self.min += self.first_list[0].features
+        self.max += self.first_list[0].features
         self.find_min_max(self.first_list)
         self.find_min_max(self.second_list)
         for word in self.first_list:
@@ -77,22 +102,42 @@ class Store:
                 word.normalized_features[i] = (word.features[i] - self.min[i]) / (self.max[i] - self.min[i])
 
     def create_zip(self):
-        with codecs.open(u'./data/list_1.csv', u'w', u'utf-8') as w:
-            w.write(self.first_list_output)
+        head = u'Доминантная номинация\tУстойчивость номинации\tСубъективная сложность\tЗнакомство с объектом\t' \
+               u'Возраст усвоения\tПредставимость\tСхожесть образа с рисунком\tЧастотность\tДлина в слогах\t' \
+               u'Длина в фонемах\n'
+        with codecs.open(u'list_1.csv', u'w', u'utf-8') as w:
+            w.write(head)
+            for word in self.first_list_output:
+                w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
 
-        with codecs.open(u'./data/list_2.csv', u'w', u'utf-8') as w:
-            w.write(self.second_list_output)
+        with codecs.open(u'list_2.csv', u'w', u'utf-8') as w:
+            w.write(head)
+            for word in self.second_list_output:
+                w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
 
-        z = zipfile.ZipFile(u'output.zip', u'w')
-        z.write(u'./data/list_1.csv')
-        z.write(u'./data/list_2.csv')
+        stat_head = u'Характеристика\tУстойчивость номинации\tСубъективная сложность\tЗнакомство с объектом\t' \
+                    u'Возраст усвоения\tПредставимость\tСхожесть образа с рисунком\tЧастотность\tДлина в слогах\t' \
+                    u'Длина в фонемах\n'
+
+        with codecs.open(u'statistics.csv', u'w', u'utf-8') as w:
+            w.write(stat_head)
+            w.write(u'p-value\t' + u'\t'.join([str(p) for p in self.p_values]) + u'\n')
+
+        z = zipfile.ZipFile(u'results.zip', u'w')
+        z.write(u'list_1.csv')
+        z.write(u'list_2.csv')
+        z.write(u'statistics.csv')
+
+        os.remove(u'list_1.csv')
+        os.remove(u'list_2.csv')
+        os.remove(u'statistics.csv')
 
     def test_and_fix(self):
         for i in self.same:
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
-                                [word.normalized_features[i] for word in self.second_list_output])
+                                     [word.normalized_features[i] for word in self.second_list_output])
 
-            if p_value_same < 0.1:
+            if p_value_same < 0.15:
                 if self.equal():
                     self.first_list.append(self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1)))
                     self.second_list.append(self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1)))
@@ -115,9 +160,9 @@ class Store:
 
                 for k in self.same:
                     p_value_same = self.test([word.normalized_features[k] for word in self.first_list_output],
-                                        [word.normalized_features[k] for word in self.second_list_output])
+                                             [word.normalized_features[k] for word in self.second_list_output])
 
-                    if p_value_same < 0.05:
+                    if p_value_same < 0.1:
                         self.allow = False
 
     def high_low(self, high, low):
@@ -135,15 +180,11 @@ class Store:
             high_stop = high_sorted[i]
             low_stop = low_sorted[i]
             i += 1
-        print len(high), len(low), 777
         return high, low
 
     def differentiate(self):
-        self.normalize()
         for word in self.first_list:
-            # print len(word.normalized_features)
-            # print self.differ
-            word.diff = word.normalized_features[self.differ - 1]  # поменяй на нормализованные!!!!
+            word.diff = word.normalized_features[self.differ - 1]
         for word in self.second_list:
             word.diff = word.normalized_features[self.differ - 1]
         if self.which_higher == 1:
@@ -168,9 +209,7 @@ class Store:
         self.number_of_same = len(self.same)
         self.length = parameters.length
         self.statistics = parameters.statistics
-        # self.first_list = self.create_list_from_to_choose(parameters.first_list)
-        # self.second_list = self.create_list_from_to_choose(parameters.second_list)
-        # print len(self.first_list), len(self.second_list)
+        # print len(self.first_list[0].normalized_features), u'длина нормализованных фич'
         for word in self.first_list:
             word.same = [word.normalized_features[i] for i in self.same]
             # word.diff = word.normalized_features[different]
@@ -234,7 +273,10 @@ class Store:
         elif self.statistics == 2:
             p_value = stats.ttest_ind(arr1, arr2, False)[1]
         elif self.statistics == 3:
-            p_value = stats.mannwhitneyu(arr1, arr2)[1]
+            if equal(arr1, arr2):
+                p_value = 1
+            else:
+                p_value = stats.mannwhitneyu(arr1, arr2)[1]
         return p_value
 
 
@@ -261,6 +303,14 @@ class Word:
 
     def __eq__(self, other):
         return self.diff == other.diff
+
+
+def equal(arr1, arr2):
+    ref = arr1[0]
+    for el in arr1[2:] + arr2:
+        if el != ref:
+            return False
+    return True
 
 
 def mean(arr):

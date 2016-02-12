@@ -12,6 +12,7 @@ __author__ = 'Gree-gorey'
 class Success(QWidget):
     def __init__(self, parent=None):
         super(Success, self).__init__(parent)
+        self.time = 0
         self.initUI()
 
     def go(self):
@@ -19,9 +20,10 @@ class Success(QWidget):
 
     def initUI(self):
         main_layout = QGridLayout()
-        message = QLabel(u'Создание листов завершено.'
+        message = QLabel(u'Создание листов завершено.<br>'
                          u'<br>Результаты сохранены в архив <b>results.zip</b>'
-                         u'<br>в папке с программой')
+                         u'<br>в папке с программой<br>'
+                         u'<br>Время работы: ' + str(round(self.parent().time, 2)) + u' с')
         message.setOpenExternalLinks(True)
 
         # Add a button
@@ -74,6 +76,21 @@ class WaitWidget(QWidget):
         main_layout.addWidget(message, 1, 1)
         self.setLayout(main_layout)
 
+    def go(self):
+        self.parent().parent().store.setup_parameters(self.parent().parent().parameters)
+
+        # собственно генерация листов
+        self.parent().parent().store.generate()
+
+        # подсчет окончательной статы
+        self.parent().parent().store.final_statistics()
+
+        # для печати результатов
+        self.parent().parent().store.print_results()
+
+        # создаем файлы и пакуем в архив
+        self.parent().parent().store.create_zip()
+
 
 class StatWidget(QWidget):
     def __init__(self, parent=None):
@@ -81,31 +98,35 @@ class StatWidget(QWidget):
         self.initUI()
 
     def go(self):
-        print self.statistics.currentIndex()
         print self.length.text()
+        print self.statistics.currentIndex()
 
         self.parent().parent().parameters.statistics = self.statistics.currentIndex()
         self.parent().parent().parameters.length = int(self.length.text())
 
-        wait = MainWindow(self.parent().parent())
-        wait.setCentralWidget(WaitWidget())
-        wait.move(600, 350)
-        wait.show()
-
-        self.parent().parent().store.setup_parameters(self.parent().parent().parameters)
+        self.parent().close()
 
         t1 = time.time()
 
+        wait = MainWindow(self.parent().parent())
+        wait_widget = WaitWidget(wait)
+        wait.setCentralWidget(wait_widget)
+        wait.move(600, 350)
+        wait.show()
+
+        wait_widget.go()
+        wait.close()
+
+        # считаем время
+        t2 = time.time()
+        self.time = t2 - t1
+
         success = MainWindow(self.parent().parent())
-        success.setCentralWidget(Success())
+        widget_success = Success(self)
+        success.setCentralWidget(widget_success)
         success.move(600, 350)
         success.show()
 
-        t2 = time.time()
-
-        print t2 - t1
-
-        self.parent().close()
 
     def initUI(self):
         # создаем главный грид
@@ -128,7 +149,7 @@ class StatWidget(QWidget):
         vbox.addWidget(self.length)
 
         # уточняем кол-во аргументов
-        vbox.addWidget(QLabel(u'Выберите статичтический тест'))
+        vbox.addWidget(QLabel(u'Выберите статистический тест'))
         self.statistics = QComboBox()
         self.statistics.addItem(u'-- не выбрано --')
         self.statistics.addItem(u'Student\'s t-test')
@@ -205,6 +226,8 @@ class TwoListsWidget(QWidget):
         self.parent().parent().store.second_list = \
             self.parent().parent().store.create_list_from_to_choose(self.parent().parent().parameters.second_list)
 
+        self.parent().parent().store.normalize()
+
         # проверяем, должны ли различаться
         if self.differ_radio.checkedId() == 1:
             self.parent().parent().store.differ = self.diff_parameter.currentIndex()
@@ -214,9 +237,9 @@ class TwoListsWidget(QWidget):
         # создаем вектор одинаковых
         self.parent().parent().parameters.get_same(self.parent().parent().store)
 
-        print self.differ_radio.checkedId()
+        # print self.differ_radio.checkedId()
         print self.diff_parameter.currentIndex()
-        print self.higher.currentIndex()
+        # print self.higher.currentIndex()
         print self.parent().parent().parameters.same
 
         stat = MainWindow(self.parent().parent())
@@ -405,7 +428,7 @@ class TwoListsWidget(QWidget):
         # выбор дифф парамтра
         self.diff_parameter = QComboBox()
         self.diff_parameter.addItem(u'-- не задан --')
-        self.diff_parameter.addItem(u'1 -Устойчивость номинации')
+        self.diff_parameter.addItem(u'Устойчивость номинации')
         self.diff_parameter.addItem(u'Субъективная сложность')
         self.diff_parameter.addItem(u'Знакомство с объектом')
         self.diff_parameter.addItem(u'Возраст усвоения')
@@ -413,7 +436,7 @@ class TwoListsWidget(QWidget):
         self.diff_parameter.addItem(u'Схожесть образа с рисунком')
         self.diff_parameter.addItem(u'Частотность')
         self.diff_parameter.addItem(u'Длина в слогах')
-        self.diff_parameter.addItem(u'9 - Длина в фонемах')
+        self.diff_parameter.addItem(u'Длина в фонемах')
         vbox.addWidget(self.diff_parameter)
 
         # выбор высоких значений
