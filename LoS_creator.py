@@ -238,9 +238,11 @@ class TwoListsWidget(QWidget):
         self.parent().parent().parameters.get_same(self.parent().parent().store)
 
         # print self.differ_radio.checkedId()
-        print self.diff_parameter.currentIndex()
+        # print self.diff_parameter.currentIndex()
         # print self.higher.currentIndex()
-        print self.parent().parent().parameters.same
+        # print self.parent().parent().parameters.same
+
+        self.parent().parent().store.split()
 
         stat = MainWindow(self.parent().parent())
         stat.setCentralWidget(StatWidget(stat))

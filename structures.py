@@ -33,11 +33,15 @@ class Store:
         while self.sharp():
             self.add_first()
 
+            # self.allow = [True in xrange(self.number_of_same)]
             self.allow = True
 
+            # while sum(self.allow) == self.number_of_same and self.less():
+
             while self.allow and self.less():
+
                 self.add_closest()
-                if len(self.first_list_output) > 10:
+                if len(self.first_list_output) > 5:
                     self.test_and_fix()
 
     def final_statistics(self):
@@ -137,7 +141,8 @@ class Store:
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
                                      [word.normalized_features[i] for word in self.second_list_output])
 
-            if p_value_same < 0.15:
+            if p_value_same < 0.2:
+                # while p_value_same < 0.06:
                 if self.equal():
                     self.first_list.append(self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1)))
                     self.second_list.append(self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1)))
@@ -158,12 +163,18 @@ class Store:
                     self.second_list_output.append(self.second_list[hhh])
                     del self.second_list[hhh]
 
-                for k in self.same:
-                    p_value_same = self.test([word.normalized_features[k] for word in self.first_list_output],
-                                             [word.normalized_features[k] for word in self.second_list_output])
+            p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
+                                     [word.normalized_features[i] for word in self.second_list_output])
 
-                    if p_value_same < 0.1:
-                        self.allow = False
+            if p_value_same < 0.15:
+                self.allow = False
+
+                # for k in self.same:
+                #     p_value_same = self.test([word.normalized_features[k] for word in self.first_list_output],
+                #                              [word.normalized_features[k] for word in self.second_list_output])
+                #
+                #     if p_value_same < 0.05:
+                #         self.allow = False
 
     def high_low(self, high, low):
         high_sorted = sorted(high, reverse=True)
@@ -203,6 +214,16 @@ class Store:
                 if is_match(a_list.vector, noun.vector):
                     new_list.append(noun)
         return new_list
+
+    def split(self):
+        if self.first_list == self.second_list:
+            new = []
+            new += self.first_list
+            random.shuffle(new)
+            self.first_list = []
+            self.first_list += new[:len(new)/2]
+            self.second_list = []
+            self.second_list += new[len(new)/2:]
 
     def setup_parameters(self, parameters):
         self.same = parameters.same
