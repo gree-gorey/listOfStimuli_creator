@@ -98,8 +98,8 @@ class StatWidget(QWidget):
         self.initUI()
 
     def go(self):
-        print self.length.text()
-        print self.statistics.currentIndex()
+        # print self.length.text()
+        # print self.statistics.currentIndex()
 
         self.parent().parent().parameters.statistics = self.statistics.currentIndex()
         self.parent().parent().parameters.length = int(self.length.text())
@@ -139,7 +139,7 @@ class StatWidget(QWidget):
 
         # пишем предварительную оценку
         vbox.addWidget(QLabel(u'Параметры установлены.<br>'
-                              u'<br>Для формирования листов с заданными параметрами'
+                              u'<br>Для формирования листов с заданными параметрами осталось:'
                               u'<br>Для Листа №1 - ' + str(len(self.parent().parent().store.first_list)) + u' слов'
                               u'<br>Для Листа №2 - ' + str(len(self.parent().parent().store.second_list)) + u' слов<br>'))
 
