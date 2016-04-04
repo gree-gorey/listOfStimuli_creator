@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 
 import os
+import math
 import random
 import codecs
 import zipfile
 from scipy import stats
 
-__author__ = 'Gree-gorey'
+__author__ = 'gree-gorey'
 
 
 class Store:
@@ -74,6 +75,11 @@ class Store:
                                      self.verbs[-1].instr,
                                      self.verbs[-1].name_rel]
 
+            log_freq = math.log(self.verbs[-1].features[6] + 1, 10)
+            self.verbs[-1].features.append(log_freq)
+
+            # print self.verbs[-1].name, self.verbs[-1].features[6], self.verbs[-1].features[9]
+
     def read_nouns(self, f):
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
@@ -82,6 +88,11 @@ class Store:
             self.nouns[-1].name = line[1]
             self.nouns[-1].features = [float(x) for x in line[2::]]
             self.nouns[-1].vector = [self.nouns[-1].part]
+
+            log_freq = math.log(self.nouns[-1].features[6] + 1, 10)
+            self.nouns[-1].features.append(log_freq)
+
+            # print self.nouns[-1].name, self.nouns[-1].features[6], self.nouns[-1].features[9]
 
     def find_min_max(self, arr):
         for word in arr:

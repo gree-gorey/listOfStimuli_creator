@@ -4,17 +4,20 @@ import codecs
 import pickle
 from structures import Store
 
-__author__ = 'Gree-gorey'
+__author__ = 'gree-gorey'
 
 
-newStore = Store()
+def main():
+    new_store = Store()
 
+    with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
+        new_store.read_nouns(f)
 
-with codecs.open(u'/home/gree-gorey/stimdb/nouns.csv', u'r', u'utf-8') as f:
-    newStore.read_nouns(f)
+    with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
+        new_store.read_verbs(f)
 
-with codecs.open(u'/home/gree-gorey/stimdb/verbs.csv', u'r', u'utf-8') as f:
-    newStore.read_verbs(f)
+    with codecs.open(u'/home/gree-gorey/stimdb/store.p', u'w', u'utf-8') as w:
+        pickle.dump(new_store, w)
 
-with codecs.open(u'/home/gree-gorey/stimdb/store.p', u'w', u'utf-8') as w:
-    pickle.dump(newStore, w)
+if __name__ == '__main__':
+    main()

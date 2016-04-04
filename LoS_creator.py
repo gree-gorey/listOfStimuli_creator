@@ -6,7 +6,7 @@ import pickle
 from structures import List, Parameters
 from PyQt4.Qt import *
 
-__author__ = 'Gree-gorey'
+__author__ = 'gree-gorey'
 
 
 class Success(QWidget):
@@ -49,7 +49,7 @@ class About(QWidget):
         main_layout = QGridLayout()
         message = QLabel(u'<b>LoS creator</b> version 0.1<br>'
                          u'Author: gree-gorey<br>'
-                         u'<a href=\"https://github.com/gree-gorey/listOfStimuli_creator\">Repository</a>\n')
+                         u'<a href=\"https://github.com/gree-gorey/losc\">Go to repository</a>\n')
         message.setOpenExternalLinks(True)
 
         # Add a button
