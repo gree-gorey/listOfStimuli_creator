@@ -1,3 +1,4 @@
+| --- | --- |
 | `verb.features[0]` | agreement |
 | `verb.features[1]` | complexity |
 | `verb.features[2]` | familiarity |
