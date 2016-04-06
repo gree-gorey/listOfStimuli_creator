@@ -74,7 +74,7 @@ class About(QWidget):
 
     def initUI(self):
         main_layout = QGridLayout()
-        message = QLabel(u'<b>LoS creator</b> version 0.1<br>'
+        message = QLabel(u'<b>LoS creator</b> version 0.2<br>'
                          u'Author: gree-gorey<br>'
                          u'<a href=\"https://github.com/gree-gorey/losc\">Go to repository</a>\n')
         message.setOpenExternalLinks(True)
