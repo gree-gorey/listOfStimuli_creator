@@ -2,6 +2,7 @@
 
 import os
 import math
+import time
 import random
 import codecs
 import zipfile
@@ -29,9 +30,17 @@ class Store:
         self.differ = 0
         self.which_higher = None
         self.p_values = []
+        self.time_begin = None
+        self.success = True
 
     def generate(self):
         while self.sharp():
+            # считаем сколько времени прошло и убиваем
+            time_current = time.time()
+            if time_current - self.time_begin > 10:
+                self.success = False
+                break
+
             self.add_first()
 
             # self.allow = [True in xrange(self.number_of_same)]
@@ -40,6 +49,10 @@ class Store:
             # while sum(self.allow) == self.number_of_same and self.less():
 
             while self.allow and self.less():
+                time_current = time.time()
+                if time_current - self.time_begin > 10:
+                    self.success = False
+                    break
 
                 self.add_closest()
                 if len(self.first_list_output) > 5:
@@ -75,8 +88,7 @@ class Store:
                                      self.verbs[-1].instr,
                                      self.verbs[-1].name_rel]
 
-            log_freq = math.log(self.verbs[-1].features[6] + 1, 10)
-            self.verbs[-1].features.append(log_freq)
+            self.verbs[-1].log_freq = math.log(self.verbs[-1].features[6] + 1, 10)
 
             # print self.verbs[-1].name, self.verbs[-1].features[6], self.verbs[-1].features[9]
 
@@ -89,8 +101,7 @@ class Store:
             self.nouns[-1].features = [float(x) for x in line[2::]]
             self.nouns[-1].vector = [self.nouns[-1].part]
 
-            log_freq = math.log(self.nouns[-1].features[6] + 1, 10)
-            self.nouns[-1].features.append(log_freq)
+            self.nouns[-1].log_freq = math.log(self.nouns[-1].features[6] + 1, 10)
 
             # print self.nouns[-1].name, self.nouns[-1].features[6], self.nouns[-1].features[9]
 
@@ -241,12 +252,23 @@ class Store:
         self.number_of_same = len(self.same)
         self.length = parameters.length
         self.statistics = parameters.statistics
+        self.freq = parameters.freq
         # print len(self.first_list[0].normalized_features), u'длина нормализованных фич'
         for word in self.first_list:
             word.same = [word.normalized_features[i] for i in self.same]
             # word.diff = word.normalized_features[different]
         for word in self.second_list:
             word.same = [word.normalized_features[i] for i in self.same]
+
+        if self.freq == 1:
+            self.change_frequency()
+
+    def change_frequency(self):
+        for word in self.first_list:
+            word.features[6] = word.log_freq
+        for word in self.second_list:
+            word.features[6] = word.log_freq
+        # print u'done freq'
 
     def add_first(self):
         self.first_list += self.first_list_output
@@ -326,6 +348,7 @@ class Word:
         self.diff = 0
         self.distance = 1
         self.vector = []
+        self.log_freq = None
 
     def __gt__(self, other):
         return self.diff > other.diff

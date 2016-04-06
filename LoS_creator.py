@@ -37,6 +37,33 @@ class Success(QWidget):
         self.setLayout(main_layout)
 
 
+class Fail(QWidget):
+    def __init__(self, parent=None):
+        super(Fail, self).__init__(parent)
+        self.time = 0
+        self.initUI()
+
+    def go(self):
+        self.parent().close()
+
+    def initUI(self):
+        main_layout = QGridLayout()
+        message = QLabel(u'Лимит времени работы программы превышен.<br>'
+                         u'Невозможно создать листы с заданными параметрами.<br>'
+                         u'<br>Попробуйте изменить параметры и попробовать снова.')
+        message.setOpenExternalLinks(True)
+
+        # Add a button
+        btn = QPushButton(u'OK')
+        btn.clicked.connect(self.go)
+        btn.resize(btn.sizeHint())
+
+        main_layout.addWidget(message, 1, 1, 1, 3)
+        main_layout.addWidget(btn, 2, 3, 1, 1)
+
+        self.setLayout(main_layout)
+
+
 class About(QWidget):
     def __init__(self, parent=None):
         super(About, self).__init__(parent)
@@ -79,17 +106,22 @@ class WaitWidget(QWidget):
     def go(self):
         self.parent().parent().store.setup_parameters(self.parent().parent().parameters)
 
+        # добавим отсчет времени
+        self.parent().parent().store.time_begin = time.time()
+
         # собственно генерация листов
         self.parent().parent().store.generate()
 
-        # подсчет окончательной статы
-        self.parent().parent().store.final_statistics()
+        if self.parent().parent().store.success:
 
-        # для печати результатов
-        self.parent().parent().store.print_results()
+            # подсчет окончательной статы
+            self.parent().parent().store.final_statistics()
 
-        # создаем файлы и пакуем в архив
-        self.parent().parent().store.create_zip()
+            # для печати результатов
+            self.parent().parent().store.print_results()
+
+            # создаем файлы и пакуем в архив
+            self.parent().parent().store.create_zip()
 
 
 class StatWidget(QWidget):
@@ -102,6 +134,7 @@ class StatWidget(QWidget):
         # print self.statistics.currentIndex()
 
         self.parent().parent().parameters.statistics = self.statistics.currentIndex()
+        self.parent().parent().parameters.freq = self.freq.currentIndex()
         self.parent().parent().parameters.length = int(self.length.text())
 
         self.parent().close()
@@ -121,11 +154,21 @@ class StatWidget(QWidget):
         t2 = time.time()
         self.time = t2 - t1
 
-        success = MainWindow(self.parent().parent())
-        widget_success = Success(self)
-        success.setCentralWidget(widget_success)
-        success.move(600, 350)
-        success.show()
+        if self.parent().parent().store.success:
+
+            success = MainWindow(self.parent().parent())
+            widget_success = Success(self)
+            success.setCentralWidget(widget_success)
+            success.move(600, 350)
+            success.show()
+
+        else:
+
+            fail = MainWindow(self.parent().parent())
+            widget_fail = Fail(self)
+            fail.setCentralWidget(widget_fail)
+            fail.move(600, 350)
+            fail.show()
 
 
     def initUI(self):
@@ -156,6 +199,13 @@ class StatWidget(QWidget):
         self.statistics.addItem(u'Welch\'s t-test')
         self.statistics.addItem(u'Manna-Whitney U test')
         vbox.addWidget(self.statistics)
+
+        # уточняем частотность
+        vbox.addWidget(QLabel(u'Преобразование частотности слов'))
+        self.freq = QComboBox()
+        self.freq.addItem(u'не требуется (по умолчанию)')
+        self.freq.addItem(u'использовать логарифмическое преобразование')
+        vbox.addWidget(self.freq)
 
         # завершаем ЛИСТ 1
         groupBox.setLayout(vbox)

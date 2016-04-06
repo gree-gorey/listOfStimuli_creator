@@ -1,3 +1,4 @@
+| code | meaning |
 | --- | --- |
 | `verb.features[0]` | agreement |
 | `verb.features[1]` | complexity |
@@ -8,4 +9,3 @@
 | `verb.features[6]` | frequency |
 | `verb.features[7]` | syllables |
 | `verb.features[8]` | phonemes |
-| `verb.features[9]` | log frequency |
