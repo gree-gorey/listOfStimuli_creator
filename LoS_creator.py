@@ -9,6 +9,11 @@ from PyQt4.Qt import *
 __author__ = 'gree-gorey'
 
 
+def get_version():
+    with open("./version.py", "rt") as f:
+        return f.readline().split("=")[1].strip(' "\n')
+
+
 class Success(QWidget):
     def __init__(self, parent=None):
         super(Success, self).__init__(parent)
@@ -74,7 +79,7 @@ class About(QWidget):
 
     def initUI(self):
         main_layout = QGridLayout()
-        message = QLabel(u'<b>LoS creator</b> version 0.2<br>'
+        message = QLabel(u'<b>LoS creator</b> version ' + get_version() + u'<br>'
                          u'Author: gree-gorey<br>'
                          u'<a href=\"https://github.com/gree-gorey/losc\">Go to repository</a>\n')
         message.setOpenExternalLinks(True)
@@ -306,7 +311,7 @@ class TwoListsWidget(QWidget):
     def initUI(self):
         # self.resize(500, 500)
         self.center()
-        self.setWindowTitle(u'LoS creator 0.1')
+        self.setWindowTitle('LoS creator ' + get_version())
 
         # задаем шрифты
         title_font = QFont()
@@ -536,7 +541,7 @@ class MainWindow(QMainWindow):
         # self.resize(500, 500)
         # self.center()
         self.move(300, 350)
-        self.setWindowTitle(u'LoS creator 0.1')
+        self.setWindowTitle(u'LoS creator ' + get_version())
 
     def center(self):
         qr = self.frameGeometry()
