@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>losc v0.3</title>
+    <meta name="description" content="List of stimuli creator">
+    <meta name="author" content="gree-gorey">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic,cyrillic-ext" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <!-- JS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+</head>
+<body>
+
+<!-- Primary Page Layout
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<div class="w3-container">
+    <div class="w3-row lists">
+        <div class="w3-half custom-container stat-container">
+            <p>Параметры установлены.</p>
+            <p>Для формирования листов с заданными параметрами осталось:<br>
+                Лист №1 — 15 слов.<br>
+                Лист №2 — 25 слов.
+            </p>
+            <span>Укажите размер листа:</span><br>
+            <input type="number" class="stat-select"><br>
+            <select class="stat-select">
+                <option value="Option 1">-- выберите статистический тест --</option>
+                <option value="Option 1">Student's t-test</option>
+                <option value="Option 2">Welch's t-test</option>
+                <option value="Option 2">Mann-Whitney U test</option>
+            </select>
+            <select class="stat-select">
+                <option value="Option 1">-- преобразование частотности слов --</option>
+                <option value="Option 1">Использовать логарифмическое преобразование</option>
+                <option value="Option 2">Не требуется</option>
+            </select>
+            <a class="w3-btn stat-btn" href="http://www.w3schools.com">Создать листы</a><br>
+            <a class="w3-btn" href="/">< В начало</a>
+        </div>
+    </div>
+</div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>

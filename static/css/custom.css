@@ -72,3 +72,22 @@ input[type=number] {
     text-align: right;
     margin-bottom: 40px;
 }
+
+.stat-select {
+    width: 370px;
+    margin-bottom: 10px;
+}
+
+input[type=number].stat-select {
+    width: 370px;
+    margin-bottom: 10px;
+}
+
+.stat-container {
+    margin-top: 10%;
+}
+
+.stat-btn {
+    margin-bottom: 15px;
+    margin-top: 20px;
+}

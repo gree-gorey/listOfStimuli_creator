@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Basic Page Needs
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>losc v0.3</title>
+    <meta name="description" content="List of stimuli creator">
+    <meta name="author" content="gree-gorey">
+
+    <!-- Mobile Specific Metas
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- FONT
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic,cyrillic-ext" rel="stylesheet">
+
+    <!-- CSS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <!-- JS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
+
+    <!-- Favicon
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+</head>
+<body>
+
+<!-- Primary Page Layout
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<div class="w3-container">
+    <div class="w3-row lists">
+        <div class="w3-half custom-container">
+            <div class="w3-card-4 list-header">
+                <h5>Лист №1</h5>
+            </div>
+
+            <div class="w3-accordion w3-light-grey">
+                <button onclick="toggleAccordion('list1_pos_container')" class="w3-btn-block w3-left-align">Выберите часть речи</button>
+                <div id="list1_pos_container" class="w3-accordion-content w3-container">
+                    <input type="radio" name="list1_pos_radio" value="verb" id="list1_pos_verb" checked> <label for="list1_pos_verb">Глаголы</label><br>
+                    <div class="verb-features">
+                        <select id="list1_arguments" class="verb-features__select">
+                            <option value="question">-- уточните количество аргументов --</option>
+                            <option value="one">Только один аргумент</option>
+                            <option value="two">Только два аргумента</option>
+                        </select>
+                        <select id="list1_reflexivity" class="verb-features__select">
+                            <option value="question">-- уточните возвратность --</option>
+                            <option value="on">Только возвратные</option>
+                            <option value="off">Только невозвратные</option>
+                        </select>
+                        <select id="list1_instrumentality" class="verb-features__select">
+                            <option value="question">-- уточните инструментальность --</option>
+                            <option value="on">Только инструментальные</option>
+                            <option value="off">Только неинструментальные</option>
+                        </select>
+                        <select id="list1_name_relation" class="verb-features__select">
+                            <option value="question">-- уточните именную соотнесенность --</option>
+                            <option value="on">Только соотнесеннее</option>
+                            <option value="off">Только несоотнесенные</option>
+                        </select>
+                    </div>
+                    <input type="radio" name="list1_pos_radio" value="noun" id="list1_pos_noun"> <label
+                        for="list1_pos_noun">Существительные</label>
+                    <div class="noun-features">
+                        <select id="list1_part" class="noun-features__select">
+                            <option value="question">-- уточните часть --</option>
+                            <option value="one">Только из первой части</option>
+                            <option value="two">Только из второй части</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="toggleAccordion('list1_features_container')" class="w3-btn-block w3-left-align">Выберите количественные
+                    характеристики (опционально)
+                </button>
+                <div id="list1_features_container" class="w3-accordion-content w3-container">
+                    <table style="width:100%">
+                        <tr>
+                            <td>Устойчивость номинации, %</td>
+                            <td>от <input id="list1_name_agreement_percent_from" type="number"><span> до </span>
+                                <input id="list1_name_agreement_percent_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Устойчивость номинации, H</td>
+                            <td>от <input id="list1_name_agreement_abs_from" type="number"><span> до </span>
+                                <input id="list1_name_agreement_abs_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Субъективная сложность</td>
+                            <td>от <input id="list1_subjective_complexity_from" type="number"><span> до </span>
+                                <input id="list1_subjective_complexity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Объективная сложность</td>
+                            <td>от <input id="list1_objective_complexity_from" type="number"><span> до </span>
+                                <input id="list1_objective_complexity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Знакомство с объектом</td>
+                            <td>от <input id="list1_familiarity_from" type="number"><span> до </span>
+                                <input id="list1_familiarity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Возраст усвоения</td>
+                            <td>от <input id="list1_age_from" type="number"><span> до </span>
+                                <input id="list1_age_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Представимость</td>
+                            <td>от <input id="list1_imageability_from" type="number"><span> до </span>
+                                <input id="list1_imageability_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Схожесть образа с рисунком</td>
+                            <td>от <input id="list1_image_agreement_from" type="number"><span> до </span>
+                                <input id="list1_image_agreement_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Частотность</td>
+                            <td>от <input id="list1_frequency_from" type="number"><span> до </span>
+                                <input id="list1_frequency_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Длина в слогах</td>
+                            <td>от <input id="list1_syllables_from" type="number"><span> до </span>
+                                <input id="list1_syllables_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Длина в фонемах</td>
+                            <td>от <input id="list1_phonemes_from" type="number"><span> до </span>
+                                <input id="list1_phonemes_to" type="number">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="w3-half custom-container">
+            <div class="w3-card-4 list-header">
+                <h5>Лист №2</h5>
+            </div>
+
+            <div class="w3-accordion w3-light-grey">
+                <button onclick="toggleAccordion('list2_pos_container')" class="w3-btn-block w3-left-align">Выберите часть речи</button>
+                <div id="list2_pos_container" class="w3-accordion-content w3-container">
+                    <input type="radio" name="list2_pos_radio" value="verb" id="list2_pos_verb" checked> <label for="list2_pos_verb">Глаголы</label><br>
+                    <div class="verb-features">
+                        <select id="list2_arguments" class="verb-features__select">
+                            <option value="question">-- уточните количество аргументов --</option>
+                            <option value="one">Только один аргумент</option>
+                            <option value="two">Только два аргумента</option>
+                        </select>
+                        <select id="list2_reflexivity" class="verb-features__select">
+                            <option value="question">-- уточните возвратность --</option>
+                            <option value="on">Только возвратные</option>
+                            <option value="off">Только невозвратные</option>
+                        </select>
+                        <select id="list2_instrumentality" class="verb-features__select">
+                            <option value="question">-- уточните инструментальность --</option>
+                            <option value="on">Только инструментальные</option>
+                            <option value="off">Только неинструментальные</option>
+                        </select>
+                        <select id="list2_name_relation" class="verb-features__select">
+                            <option value="question">-- уточните именную соотнесенность --</option>
+                            <option value="on">Только соотнесеннее</option>
+                            <option value="off">Только несоотнесенные</option>
+                        </select>
+                    </div>
+                    <input type="radio" name="list2_pos_radio" value="noun" id="list2_pos_noun"> <label
+                        for="list2_pos_noun">Существительные</label>
+                    <div class="noun-features">
+                        <select id="list2_part" class="noun-features__select">
+                            <option value="question">-- уточните часть --</option>
+                            <option value="one">Только из первой части</option>
+                            <option value="two">Только из второй части</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="toggleAccordion('list2_features_container')" class="w3-btn-block w3-left-align">Выберите количественные
+                    характеристики (опционально)
+                </button>
+                <div id="list2_features_container" class="w3-accordion-content w3-container">
+                    <table style="width:100%">
+                        <tr>
+                            <td>Устойчивость номинации, %</td>
+                            <td>от <input id="list2_name_agreement_percent_from" type="number"><span> до </span>
+                                <input id="list2_name_agreement_percent_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Устойчивость номинации, H</td>
+                            <td>от <input id="list2_name_agreement_abs_from" type="number"><span> до </span>
+                                <input id="list2_name_agreement_abs_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Субъективная сложность</td>
+                            <td>от <input id="list2_subjective_complexity_from" type="number"><span> до </span>
+                                <input id="list2_subjective_complexity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Объективная сложность</td>
+                            <td>от <input id="list2_objective_complexity_from" type="number"><span> до </span>
+                                <input id="list2_objective_complexity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Знакомство с объектом</td>
+                            <td>от <input id="list2_familiarity_from" type="number"><span> до </span>
+                                <input id="list2_familiarity_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Возраст усвоения</td>
+                            <td>от <input id="list2_age_from" type="number"><span> до </span>
+                                <input id="list2_age_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Представимость</td>
+                            <td>от <input id="list2_imageability_from" type="number"><span> до </span>
+                                <input id="list2_imageability_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Схожесть образа с рисунком</td>
+                            <td>от <input id="list2_image_agreement_from" type="number"><span> до </span>
+                                <input id="list2_image_agreement_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Частотность</td>
+                            <td>от <input id="list2_frequency_from" type="number"><span> до </span>
+                                <input id="list2_frequency_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Длина в слогах</td>
+                            <td>от <input id="list2_syllables_from" type="number"><span> до </span>
+                                <input id="list2_syllables_to" type="number">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Длина в фонемах</td>
+                            <td>от <input id="list2_phonemes_from" type="number"><span> до </span>
+                                <input id="list2_phonemes_to" type="number">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="w3-row custom-container">
+        <div class="w3-accordion w3-light-grey">
+            <button onclick="toggleAccordion('differ_container')" class="w3-btn-block">Выберите отличающие параметры</button>
+            <div id="differ_container" class="w3-accordion-content w3-container">
+                <input type="radio" name="differ" value="no" id="should-not-differ" checked> <label
+                        for="should-not-differ">Листы не должны отличаться</label><br>
+                <input type="radio" name="differ" value="yes" id="should-differ"> <label
+                        for="should-differ">Листы должны отличаться на параметр:</label><br>
+                <div class="verb-features">
+                    <select id="differ_features" class="verb-features__select">
+                        <option value="question">-- выберите параметр --</option>
+                        <option value="name_agreement_percent">Устойчивость номинации, %</option>
+                        <option value="name_agreement_abs">Устойчивость номинации, H</option>
+                        <option value="subjective_complexity">Субъективная сложность</option>
+                        <option value="objective_complexity">Объективная сложность</option>
+                        <option value="familiarity">Знакомство с объектом</option>
+                        <option value="age">Возраст усвоения</option>
+                        <option value="imageability">Представимость</option>
+                        <option value="image_agreement">Схожесть образа с рисунком</option>
+                        <option value="frequency">Частотность</option>
+                        <option value="syllables">Длина в слогах</option>
+                        <option value="phonemes">Длина в фонемах</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="w3-container custom-container next-container">
+        <button class="w3-btn" onClick="setParameters();">Далее ></button>
+    </div>
+</div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>
