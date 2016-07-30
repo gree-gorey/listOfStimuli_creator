@@ -13,8 +13,8 @@ __author__ = 'gree-gorey'
 
 class Store:
     def __init__(self):
-        self.min = []
-        self.max = []
+        self.min = dict()
+        self.max = dict()
         self.first_list = []
         self.second_list = []
         self.nouns = []
@@ -27,7 +27,7 @@ class Store:
         self.allow = True
         self.same = []
         self.statistics = None
-        self.differ = 0
+        self.key_for_differ_feature = ''
         self.which_higher = None
         self.p_values = []
         self.time_begin = None
@@ -75,36 +75,37 @@ class Store:
 
     def read_verbs(self, f):
         for line in f:
-            line = line.rstrip(u'\n').split(u'\t')
+            line = line.rstrip(u'\n').replace(',', '.').split(u'\t')
             self.verbs.append(Word())
 
-            self.verbs[-1].name = line[0]
+            self.verbs[-1].name = line[0] + '. ' + line[1] + ' (' + line[2] + ')'
 
-            self.verbs[-1].features = dict()
-            self.verbs[-1].features['part'] = line[0]
-            self.verbs[-1].features['name_agreement_percent'] = float(line[2])
-            self.verbs[-1].features['name_agreement_abs'] = float(line[3])
-            self.verbs[-1].features['subjective_complexity'] = float(line[4])
-            self.verbs[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
-            self.verbs[-1].features['familiarity'] = float(line[6])
-            self.verbs[-1].features['age'] = float(line[7])
-            self.verbs[-1].features['imageability'] = float(line[8])
-            self.verbs[-1].features['image_agreement'] = float(line[9])
-            self.verbs[-1].features['frequency'] = float(line[10])
-            self.verbs[-1].features['syllables'] = float(line[11])
-            self.verbs[-1].features['phonemes'] = float(line[12])
+            self.verbs[-1].features['name_agreement_percent'] = float(line[3])
+            self.verbs[-1].features['name_agreement_abs'] = float(line[4])
+            self.verbs[-1].features['subjective_complexity'] = float(line[5])
+            self.verbs[-1].features['objective_complexity'] = None if '-' in line[6] else float(line[6])
+            self.verbs[-1].features['familiarity'] = float(line[7])
+            self.verbs[-1].features['age'] = float(line[8])
+            self.verbs[-1].features['imageability'] = float(line[9])
+            self.verbs[-1].features['image_agreement'] = float(line[10])
+            self.verbs[-1].features['frequency'] = float(line[11])
+            self.verbs[-1].features['syllables'] = float(line[12])
+            self.verbs[-1].features['phonemes'] = float(line[13])
+            self.verbs[-1].features['arguments'] = 'one' if '1' in line[14] else 'two'
+            self.verbs[-1].features['reflexivity'] = 'on' if '+' in line[15] else 'off'
+            self.verbs[-1].features['instrumentality'] = 'on' if '+' in line[16] else 'off'
+            self.verbs[-1].features['relation'] = 'on' if '+' in line[16] else 'off'
 
             # логарифмируем частоту
             self.verbs[-1].log_freq = math.log(self.verbs[-1].features['frequency'] + 1, 10)
 
     def read_nouns(self, f):
         for line in f:
-            line = line.rstrip(u'\n').split(u'\t')
+            line = line.rstrip(u'\n').replace(',', '.').split(u'\t')
             self.nouns.append(Word())
 
             self.nouns[-1].name = line[1]
 
-            self.nouns[-1].features = dict()
             self.nouns[-1].features['part'] = line[0]
             self.nouns[-1].features['name_agreement_percent'] = float(line[2])
             self.nouns[-1].features['name_agreement_abs'] = float(line[3])
@@ -121,27 +122,35 @@ class Store:
             # логарифмируем частоту
             self.nouns[-1].log_freq = math.log(self.nouns[-1].features['frequency'] + 1, 10)
 
-    def find_min_max(self, arr):
-        for word in arr:
-            for i in xrange(len(word.features)):
-                if word.features[i] < self.min[i]:
-                    self.min[i] = word.features[i]
-                if word.features[i] > self.max[i]:
-                    self.max[i] = word.features[i]
+    def find_min_max(self, word_list):
+        for word in word_list:
+            for key in word.features:
+                if type(word.features[key]) == float:
+                    if word.features[key] < self.min[key]:
+                        self.min[key] = word.features[key]
+                    if word.features[key] > self.max[key]:
+                        self.max[key] = word.features[key]
 
     def normalize(self):
-        self.min += self.first_list[0].features
-        self.max += self.first_list[0].features
+        # копируем фичи первого слова, чтобы было с чего начать сравнивать
+        self.min = self.first_list[0].features.copy()
+        self.max = self.first_list[0].features.copy()
+
+        # находим минимум и максимум для всех фич в листах
         self.find_min_max(self.first_list)
         self.find_min_max(self.second_list)
+
+        # нормализуем
         for word in self.first_list:
-            word.normalized_features += word.features
-            for i in xrange(len(word.features)):
-                word.normalized_features[i] = (word.features[i] - self.min[i]) / (self.max[i] - self.min[i])
+            word.normalized_features = word.features.copy()
+            for key in word.features:
+                if type(word.features[key]) == float:
+                    word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
         for word in self.second_list:
-            word.normalized_features += word.features
-            for i in xrange(len(word.features)):
-                word.normalized_features[i] = (word.features[i] - self.min[i]) / (self.max[i] - self.min[i])
+            word.normalized_features = word.features.copy()
+            for key in word.features:
+                if type(word.features[key]) == float:
+                    word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
         head = u'Доминантная номинация\tУстойчивость номинации\tСубъективная сложность\tЗнакомство с объектом\t' \
@@ -233,25 +242,34 @@ class Store:
 
     def differentiate(self):
         for word in self.first_list:
-            word.diff = word.normalized_features[self.differ - 1]
+            word.value_of_differ_feature = word.normalized_features[self.key_for_differ_feature]
         for word in self.second_list:
-            word.diff = word.normalized_features[self.differ - 1]
-        if self.which_higher == 1:
+            word.value_of_differ_feature = word.normalized_features[self.key_for_differ_feature]
+        if self.which_higher == 'first':
             self.first_list, self.second_list = self.high_low(self.first_list, self.second_list)
-        elif self.which_higher == 2:
+        elif self.which_higher == 'second':
             self.second_list, self.first_list = self.high_low(self.second_list, self.first_list)
 
-    def create_list_from_to_choose(self, a_list):
-        new_list = []
-        if a_list.pos == 'verb':
+    def create_list_from_to_choose(self, parameters_for_one_list):
+        filtered_list = []
+        if parameters_for_one_list['pos'] == 'verb':
+            parameters_for_one_list['features']['part']['matters'] = False
+
             for verb in self.verbs:
-                if is_match(a_list.vector, verb.vector):
-                    new_list.append(verb)
-        elif a_list.pos == 'noun':
+                if is_match(verb, parameters_for_one_list):
+                    filtered_list.append(verb)
+
+        elif parameters_for_one_list['pos'] == 'noun':
+            parameters_for_one_list['features']['arguments']['matters'] = False
+            parameters_for_one_list['features']['reflexivity']['matters'] = False
+            parameters_for_one_list['features']['instrumentality']['matters'] = False
+            parameters_for_one_list['features']['relation']['matters'] = False
+
             for noun in self.nouns:
-                if is_match(a_list.vector, noun.vector):
-                    new_list.append(noun)
-        return new_list
+                if is_match(noun, parameters_for_one_list):
+                    filtered_list.append(noun)
+
+        return filtered_list
 
     def split(self):
         if self.first_list == self.second_list:
@@ -353,27 +371,28 @@ class Store:
 class Word:
     def __init__(self):
         self.name = u''
-        self.features = []
-        self.part = 0
-        self.instr = None
-        self.agr = 0
-        self.reflexive = None
-        self.name_rel = None
-        self.normalized_features = []
+        self.features = {
+            'part': None,
+            'arguments': None,
+            'reflexivity': None,
+            'instrumentality': None,
+            'relation': None
+        }
+        self.normalized_features = dict()
         self.same = 0
-        self.diff = 0
+        self.value_of_differ_feature = 0
         self.distance = 1
         self.vector = []
         self.log_freq = None
 
     def __gt__(self, other):
-        return self.diff > other.diff
+        return self.value_of_differ_feature > other.value_of_differ_feature
 
     def __lt__(self, other):
-        return self.diff < other.diff
+        return self.value_of_differ_feature < other.value_of_differ_feature
 
     def __eq__(self, other):
-        return self.diff == other.diff
+        return self.value_of_differ_feature == other.value_of_differ_feature
 
 
 def equal(arr1, arr2):
@@ -406,41 +425,28 @@ def compensate(higher, lower, i):
     return first_list_index, second_list_index
 
 
-def is_match(one, other):
-    for item in [a*b for a, b in zip(one, other)]:
-        if item != 1 and item != 0:
-            return False
+def is_match(database_word, client_word_parameters):
+    for feature in client_word_parameters['features']:
+
+        # Берем только те, которые нам важны
+        if client_word_parameters['features'][feature]['matters']:
+
+            # если это категориальная фича, просто сравниваем значение
+            if client_word_parameters['features'][feature]['categorical']:
+                if client_word_parameters['features'][feature]['value'] != database_word.features[feature]:
+                    return False
+
+            # если это континуальная фича, то должна попадать в диапазон
+            else:
+                # print client_word_parameters['features'][feature]['value']
+                # print database_word.features[feature]
+                # print float(client_word_parameters['features'][feature]['value'][0]) <= database_word.features[feature] <= float(client_word_parameters['features'][feature]['value'][1])
+
+                if not client_word_parameters['features'][feature]['value'][0]:
+                    client_word_parameters['features'][feature]['value'][0] = -float('inf')
+                if not client_word_parameters['features'][feature]['value'][1]:
+                    client_word_parameters['features'][feature]['value'][1] = float('inf')
+
+                if not float(client_word_parameters['features'][feature]['value'][0]) <= database_word.features[feature] <= float(client_word_parameters['features'][feature]['value'][1]):
+                    return False
     return True
-
-
-class List:
-    def __init__(self):
-        self.pos = None
-        self.part = None
-        self.arguments = None
-        self.reflexivity = None
-        self.instrumentality = None
-        self.relation = None
-        self.same = None
-        self.vector = []
-
-    def get_vector(self):
-        if self.pos == 'verb':
-            self.vector = [self.arguments, self.reflexivity, self.instrumentality, self.relation]
-        elif self.pos == 'noun':
-            self.vector = [self.part]
-
-
-class Parameters:
-    def __init__(self):
-        self.first_list = None
-        self.second_list = None
-        self.length = 800
-        self.differ = 0
-        self.statistics = None
-        self.same = []
-
-    def get_same(self, store):
-        for i in xrange(9):
-            if i != store.differ - 1:
-                self.same.append(i)

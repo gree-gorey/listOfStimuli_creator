@@ -24,6 +24,7 @@
 
     <!-- JS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
 
     <!-- Favicon
@@ -62,10 +63,10 @@
                             <option value="on">Только инструментальные</option>
                             <option value="off">Только неинструментальные</option>
                         </select>
-                        <select id="list1_name_relation" class="verb-features__select">
-                            <option value="question">-- уточните именную соотнесенность --</option>
-                            <option value="on">Только соотнесеннее</option>
-                            <option value="off">Только несоотнесенные</option>
+                        <select id="list1_relation" class="verb-features__select">
+                            <option value="question">-- уточните именную соотнесённость --</option>
+                            <option value="on">Только соотнесённыее</option>
+                            <option value="off">Только несоотнесённые</option>
                         </select>
                     </div>
                     <input type="radio" name="list1_pos_radio" value="noun" id="list1_pos_noun"> <label
@@ -73,8 +74,8 @@
                     <div class="noun-features">
                         <select id="list1_part" class="noun-features__select">
                             <option value="question">-- уточните часть --</option>
-                            <option value="one">Только из первой части</option>
-                            <option value="two">Только из второй части</option>
+                            <option value="first">Только из первой части</option>
+                            <option value="second">Только из второй части</option>
                         </select>
                     </div>
                 </div>
@@ -178,10 +179,10 @@
                             <option value="on">Только инструментальные</option>
                             <option value="off">Только неинструментальные</option>
                         </select>
-                        <select id="list2_name_relation" class="verb-features__select">
-                            <option value="question">-- уточните именную соотнесенность --</option>
-                            <option value="on">Только соотнесеннее</option>
-                            <option value="off">Только несоотнесенные</option>
+                        <select id="list2_relation" class="verb-features__select">
+                            <option value="question">-- уточните именную соотнесённость --</option>
+                            <option value="on">Только соотнесённыее</option>
+                            <option value="off">Только несоотнесённые</option>
                         </select>
                     </div>
                     <input type="radio" name="list2_pos_radio" value="noun" id="list2_pos_noun"> <label
@@ -189,8 +190,8 @@
                     <div class="noun-features">
                         <select id="list2_part" class="noun-features__select">
                             <option value="question">-- уточните часть --</option>
-                            <option value="one">Только из первой части</option>
-                            <option value="two">Только из второй части</option>
+                            <option value="first">Только из первой части</option>
+                            <option value="second">Только из второй части</option>
                         </select>
                     </div>
                 </div>
@@ -274,13 +275,9 @@
         <div class="w3-accordion w3-light-grey">
             <button onclick="toggleAccordion('differ_container')" class="w3-btn-block">Выберите отличающие параметры</button>
             <div id="differ_container" class="w3-accordion-content w3-container">
-                <input type="radio" name="differ" value="no" id="should-not-differ" checked> <label
-                        for="should-not-differ">Листы не должны отличаться</label><br>
-                <input type="radio" name="differ" value="yes" id="should-differ"> <label
-                        for="should-differ">Листы должны отличаться на параметр:</label><br>
+                <span>Выберите параметры, по которым листы НЕ должны отличаться (удерживая зажатой клавишу ctrl):</span><br>
                 <div class="verb-features">
-                    <select id="differ_features" class="verb-features__select">
-                        <option value="question">-- выберите параметр --</option>
+                    <select multiple id="same_features" class="verb-features__select">
                         <option value="name_agreement_percent">Устойчивость номинации, %</option>
                         <option value="name_agreement_abs">Устойчивость номинации, H</option>
                         <option value="subjective_complexity">Субъективная сложность</option>
@@ -292,6 +289,28 @@
                         <option value="frequency">Частотность</option>
                         <option value="syllables">Длина в слогах</option>
                         <option value="phonemes">Длина в фонемах</option>
+                    </select>
+                </div>
+                <span>Укажите (если требуется) параметр, по которому листы должны отличаться:</span><br>
+                <div class="verb-features">
+                    <select id="differ_feature" class="verb-features__select">
+                        <option value="question">-- не требуется --</option>
+                        <option value="name_agreement_percent">Устойчивость номинации, %</option>
+                        <option value="name_agreement_abs">Устойчивость номинации, H</option>
+                        <option value="subjective_complexity">Субъективная сложность</option>
+                        <option value="objective_complexity">Объективная сложность</option>
+                        <option value="familiarity">Знакомство с объектом</option>
+                        <option value="age">Возраст усвоения</option>
+                        <option value="imageability">Представимость</option>
+                        <option value="image_agreement">Схожесть образа с рисунком</option>
+                        <option value="frequency">Частотность</option>
+                        <option value="syllables">Длина в слогах</option>
+                        <option value="phonemes">Длина в фонемах</option>
+                    </select><br>
+                    <select id="which_is_higher" class="verb-features__select">
+                        <option value="question">-- высокие значения у листа --</option>
+                        <option value="first">Высокие значения у Листа №1</option>
+                        <option value="second">Высокие значения у Листа №2</option>
                     </select>
                 </div>
             </div>

@@ -40,11 +40,11 @@
         <div class="w3-half custom-container stat-container">
             <p>Параметры установлены.</p>
             <p>Для формирования листов с заданными параметрами осталось:<br>
-                Лист №1 — 15 слов.<br>
-                Лист №2 — 25 слов.
+                Лист №1 — {{first_list_len}} слов.<br>
+                Лист №2 — {{second_list_len}} слов.
             </p>
             <span>Укажите размер листа:</span><br>
-            <input type="number" class="stat-select"><br>
+            <input type="number" class="stat-select" max={{max}}><br>
             <select class="stat-select">
                 <option value="Option 1">-- выберите статистический тест --</option>
                 <option value="Option 1">Student's t-test</option>
