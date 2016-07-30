@@ -77,44 +77,49 @@ class Store:
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
             self.verbs.append(Word())
+
             self.verbs[-1].name = line[0]
-            self.verbs[-1].features = [float(x) for x in line[1:10:]]
-            self.verbs[-1].arg = 1 if u'1' in line[10] else 0.5
-            self.verbs[-1].reflexive = 1 if u'+' in line[11] else 0.5
-            self.verbs[-1].instr = 1 if u'+' in line[12] else 0.5
-            self.verbs[-1].name_rel = 1 if u'+' in line[13] else 0.5
-            self.verbs[-1].vector = [self.verbs[-1].arg,
-                                     self.verbs[-1].reflexive,
-                                     self.verbs[-1].instr,
-                                     self.verbs[-1].name_rel]
 
-            self.verbs[-1].log_freq = math.log(self.verbs[-1].features[6] + 1, 10)
+            self.verbs[-1].features = dict()
+            self.verbs[-1].features['part'] = line[0]
+            self.verbs[-1].features['name_agreement_percent'] = float(line[2])
+            self.verbs[-1].features['name_agreement_abs'] = float(line[3])
+            self.verbs[-1].features['subjective_complexity'] = float(line[4])
+            self.verbs[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
+            self.verbs[-1].features['familiarity'] = float(line[6])
+            self.verbs[-1].features['age'] = float(line[7])
+            self.verbs[-1].features['imageability'] = float(line[8])
+            self.verbs[-1].features['image_agreement'] = float(line[9])
+            self.verbs[-1].features['frequency'] = float(line[10])
+            self.verbs[-1].features['syllables'] = float(line[11])
+            self.verbs[-1].features['phonemes'] = float(line[12])
 
-            # print self.verbs[-1].name, self.verbs[-1].features[6], self.verbs[-1].features[9]
+            # логарифмируем частоту
+            self.verbs[-1].log_freq = math.log(self.verbs[-1].features['frequency'] + 1, 10)
 
     def read_nouns(self, f):
         for line in f:
             line = line.rstrip(u'\n').split(u'\t')
             self.nouns.append(Word())
-            self.nouns[-1].part = 1 if u'1' in line[0] else 0.5
-            self.nouns[-1].name = line[1]
 
-            self.nouns[-1].features = [float(x) for x in line[2::]]
+            self.nouns[-1].name = line[1]
 
             self.nouns[-1].features = dict()
             self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['name_agreement'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
-            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['name_agreement_percent'] = float(line[2])
+            self.nouns[-1].features['name_agreement_abs'] = float(line[3])
+            self.nouns[-1].features['subjective_complexity'] = float(line[4])
+            self.nouns[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
+            self.nouns[-1].features['familiarity'] = float(line[6])
+            self.nouns[-1].features['age'] = float(line[7])
+            self.nouns[-1].features['imageability'] = float(line[8])
+            self.nouns[-1].features['image_agreement'] = float(line[9])
+            self.nouns[-1].features['frequency'] = float(line[10])
+            self.nouns[-1].features['syllables'] = float(line[11])
+            self.nouns[-1].features['phonemes'] = float(line[12])
 
-            self.nouns[-1].vector = [self.nouns[-1].part]
-
-            self.nouns[-1].log_freq = math.log(self.nouns[-1].features[6] + 1, 10)
+            # логарифмируем частоту
+            self.nouns[-1].log_freq = math.log(self.nouns[-1].features['frequency'] + 1, 10)
 
     def find_min_max(self, arr):
         for word in arr:
