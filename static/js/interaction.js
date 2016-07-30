@@ -20,7 +20,7 @@ function setParameters() {
             "arguments": document.getElementById("list1_arguments").value,
             "reflexivity": document.getElementById("list1_reflexivity").value,
             "instrumentality": document.getElementById("list1_instrumentality").value,
-            "name_relation": document.getElementById("list1_name_relation").value,
+            "relation": document.getElementById("list1_name_relation").value,
             "part": document.getElementById("list1_part").value,
             "features": {
                 "name_agreement_percent": {

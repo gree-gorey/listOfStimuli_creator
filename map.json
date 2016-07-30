@@ -1,0 +1,7 @@
+{
+  "reflexivity": {
+    "matters": true,
+    "value": [0, 50],
+    "categorical": true
+  }
+}

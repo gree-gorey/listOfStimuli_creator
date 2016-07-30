@@ -98,12 +98,23 @@ class Store:
             self.nouns.append(Word())
             self.nouns[-1].part = 1 if u'1' in line[0] else 0.5
             self.nouns[-1].name = line[1]
+
             self.nouns[-1].features = [float(x) for x in line[2::]]
+
+            self.nouns[-1].features = dict()
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['name_agreement'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = line[0]
+
             self.nouns[-1].vector = [self.nouns[-1].part]
 
             self.nouns[-1].log_freq = math.log(self.nouns[-1].features[6] + 1, 10)
-
-            # print self.nouns[-1].name, self.nouns[-1].features[6], self.nouns[-1].features[9]
 
     def find_min_max(self, arr):
         for word in arr:
@@ -227,11 +238,11 @@ class Store:
 
     def create_list_from_to_choose(self, a_list):
         new_list = []
-        if a_list.pos == 1:
+        if a_list.pos == 'verb':
             for verb in self.verbs:
                 if is_match(a_list.vector, verb.vector):
                     new_list.append(verb)
-        elif a_list.pos == 2:
+        elif a_list.pos == 'noun':
             for noun in self.nouns:
                 if is_match(a_list.vector, noun.vector):
                     new_list.append(noun)
@@ -409,9 +420,9 @@ class List:
         self.vector = []
 
     def get_vector(self):
-        if self.pos == 1:
+        if self.pos == 'verb':
             self.vector = [self.arguments, self.reflexivity, self.instrumentality, self.relation]
-        elif self.pos == 2:
+        elif self.pos == 'noun':
             self.vector = [self.part]
 
 

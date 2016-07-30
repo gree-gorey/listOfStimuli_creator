@@ -2,11 +2,89 @@
 
 import time
 import flask
+import pickle
+from structures import List, Parameters
 
 __author__ = 'gree-gorey'
 
 # Initialize the Flask application
 app = flask.Flask(__name__)
+
+# создаем пустой экземпляр класса с параметрами
+parameters = Parameters()
+
+# загружаем базу данных в переменную
+with open(u'store.p', u'r') as f:
+    store = pickle.load(f)
+
+
+def set_parameters(paramaters_from_client):
+    # добавляем параметры первого листа
+    parameters.first_list = List()
+    parameters.first_list.pos = paramaters_from_client['pos']
+    if parameters.first_list.pos == 'verb':
+        parameters.first_list.arguments = paramaters_from_client['arguments']
+        parameters.first_list.reflexivity = paramaters_from_client['reflexivity']
+        parameters.first_list.instrumentality = paramaters_from_client['instrumentality']
+        parameters.first_list.relation = paramaters_from_client['relation']
+    elif parameters.first_list.pos == 'noun':
+        parameters.first_list.part = paramaters_from_client['part']
+    parameters.first_list.get_vector()
+
+    # добавляем параметры второго листа
+    parameters.second_list = List()
+    parameters.second_list.pos = self.list_2_pos.checkedId()
+    if parameters.second_list.pos == 1:
+        parameters.second_list.arguments = self.arguments_list2.currentIndex()
+        parameters.second_list.reflexivity = self.reflexivity_list2.currentIndex()
+        parameters.second_list.instrumentality = self.instrumentality_list2.currentIndex()
+        parameters.second_list.relation = self.relation_list2.currentIndex()
+    elif parameters.second_list.pos == 2:
+        parameters.second_list.part = self.part_list2.currentIndex()
+    parameters.second_list.get_vector()
+
+    # создаем в сторе предварительные листы
+    store.first_list = store.create_list_from_to_choose(parameters.first_list)
+    store.second_list = store.create_list_from_to_choose(parameters.second_list)
+
+    store.normalize()
+
+    # проверяем, должны ли различаться
+    if self.differ_radio.checkedId() == 1:
+        self.parent().parent().store.differ = self.diff_parameter.currentIndex()
+        self.parent().parent().store.which_higher = self.higher.currentIndex()
+        self.parent().parent().store.differentiate()
+
+    # создаем вектор одинаковых
+    parameters.get_same(self.parent().parent().store)
+
+    store.split()
+
+
+parameters.statistics = self.statistics.currentIndex()
+parameters.freq = self.freq.currentIndex()
+parameters.length = int(self.length.text())
+
+
+def go():
+    # устанавливаем параметры
+    store.setup_parameters(parameters)
+
+    # добавим отсчет времени
+    store.time_begin = time.time()
+
+    # собственно генерация листов
+    store.generate()
+
+    if store.success:
+        # подсчет окончательной статы
+        store.final_statistics()
+
+        # для печати результатов
+        store.print_results()
+
+        # создаем файлы и пакуем в архив
+        store.create_zip()
 
 
 @app.route('/')
