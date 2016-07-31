@@ -34,7 +34,11 @@ def statistics():
 
 @app.route('/_create', methods=['GET', 'POST'])
 def create():
+    result = {'feedback': 'failure'}
+
     parameters_from_client = flask.request.json
+
+    time.sleep(2)
 
     store.parameters.length = int(parameters_from_client['length'])
     store.parameters.statistics = parameters_from_client['statistics']
@@ -51,6 +55,8 @@ def create():
     store.generate()
 
     if store.success:
+        result['feedback'] = 'success'
+
         # подсчет окончательной статы
         store.final_statistics()
 
@@ -59,8 +65,6 @@ def create():
 
         # создаем файлы и пакуем в архив
         store.create_zip()
-
-    result = {}
 
     return flask.jsonify(result=result)
 

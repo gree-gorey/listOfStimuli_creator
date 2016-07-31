@@ -238,6 +238,22 @@ function setParameters() {
 
     parameters["which_is_higher"] = document.getElementById("which_is_higher").value;
 
+
+    if ($.inArray(parameters["differ_feature"], parameters["same_features"]) != -1) {
+        let message = document.getElementById('message');
+        message.innerHTML = "Параметр, по которому листы должны отличаться не может одновременно быть в списке параметров, " +
+            "по которым листы не дожны отличаться.";
+        showSuccessMessage();
+        return
+    }
+
+    if (parameters["differ_feature"] != "question" && parameters["which_is_higher"] === "question") {
+        let message = document.getElementById('message');
+        message.innerHTML = "Вы не указали, какой лист должен иметь высокие значения.";
+        showSuccessMessage();
+        return
+    }
+
     var body = document.body;
 
     body.className = "loading";
@@ -247,31 +263,22 @@ function setParameters() {
         data: JSON.stringify(parameters),
         contentType: 'application/json',
         dataType: 'json',
-        success: function (data) {
+        success: function () {
             window.location = "/statistics";
-            // let feedback = data.result["feedback"];
-            // let id = data.result["id"];
-            //
-            // if (feedback == "success") {
-            //     let ok = document.getElementById('ok');
-            //     ok.onclick = function () {
-            //         window.location.assign("/search?id=" + id);
-            //     };
-            //     showSuccessMessage();
-            // } else {
-            //     let ok = document.getElementById('ok');
-            //     ok.onclick = function () {
-            //         hideSuccessMessage();
-            //     };
-            //
-            //     let message = document.getElementById('message');
-            //     message.innerText = "Невозможно сохранить статью. Обратитесь к администрации.";
-            //     showSuccessMessage();
-            // }
         }
     }).done(function () {
         body.className = "";
     });
 
-    console.log(parameters);
+    // console.log(parameters);
+}
+
+function showSuccessMessage() {
+    var modal = document.getElementById('successMessage');
+    modal.style.display = "block";
+}
+
+function hideSuccessMessage() {
+    var modal = document.getElementById('successMessage');
+    modal.style.display = "none";
 }
