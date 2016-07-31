@@ -24,7 +24,8 @@
 
     <!-- JS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -44,19 +45,19 @@
                 Лист №2 — {{second_list_len}} слов.
             </p>
             <span>Укажите размер листа:</span><br>
-            <input type="number" class="stat-select" max={{max}}><br>
-            <select class="stat-select">
-                <option value="Option 1">-- выберите статистический тест --</option>
-                <option value="Option 1">Student's t-test</option>
-                <option value="Option 2">Welch's t-test</option>
-                <option value="Option 2">Mann-Whitney U test</option>
+            <input id="length" type="number" class="stat-select" max={{max}}><br>
+            <span>Выберите статистический тест:</span><br>
+            <select id="statistics" class="stat-select">
+                <option value="student">Student's t-test</option>
+                <option value="welch">Welch's t-test</option>
+                <option value="mann">Mann-Whitney U test</option>
             </select>
-            <select class="stat-select">
-                <option value="Option 1">-- преобразование частотности слов --</option>
-                <option value="Option 1">Использовать логарифмическое преобразование</option>
-                <option value="Option 2">Не требуется</option>
+            <span>Преобразование частотности слов:</span><br>
+            <select id="frequency" class="stat-select">
+                <option value="on">Использовать логарифмическое преобразование</option>
+                <option value="off">Не требуется</option>
             </select>
-            <a class="w3-btn stat-btn" href="http://www.w3schools.com">Создать листы</a><br>
+            <button class="w3-btn stat-btn" onClick="createLists();">Создать листы</button><br>
             <a class="w3-btn" href="/">< В начало</a>
         </div>
     </div>

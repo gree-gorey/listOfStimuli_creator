@@ -3,6 +3,7 @@
 import time
 import flask
 import pickle
+from structures import Parameters, Store
 
 __author__ = 'gree-gorey'
 
@@ -10,9 +11,7 @@ __author__ = 'gree-gorey'
 app = flask.Flask(__name__)
 
 
-# загружаем базу данных в переменную
-with open(u'data/store.p', u'r') as f:
-    store = pickle.load(f)
+store = Store()
 
 
 @app.route('/')
@@ -36,30 +35,30 @@ def statistics():
 @app.route('/_create', methods=['GET', 'POST'])
 def create():
     parameters_from_client = flask.request.json
-    # print parameters_from_client['list1']['features']['reflexivity']
 
-    # parameters.statistics = self.statistics.currentIndex()
-    # parameters.freq = self.freq.currentIndex()
-    # parameters.length = int(self.length.text())
+    store.parameters.length = int(parameters_from_client['length'])
+    store.parameters.statistics = parameters_from_client['statistics']
+    store.parameters.frequency = parameters_from_client['frequency']
+    # print parameters.length
 
-    # # устанавливаем параметры
-    # store.setup_parameters(parameters)
-    #
-    # # добавим отсчет времени
-    # store.time_begin = time.time()
-    #
-    # # собственно генерация листов
-    # store.generate()
-    #
-    # if store.success:
-    #     # подсчет окончательной статы
-    #     store.final_statistics()
-    #
-    #     # для печати результатов
-    #     store.print_results()
-    #
-    #     # создаем файлы и пакуем в архив
-    #     store.create_zip()
+    # устанавливаем параметры
+    store.setup_parameters()
+
+    # добавим отсчет времени
+    store.time_begin = time.time()
+
+    # собственно генерация листов
+    store.generate()
+
+    if store.success:
+        # подсчет окончательной статы
+        store.final_statistics()
+
+        # для печати результатов
+        store.print_results()
+
+        # создаем файлы и пакуем в архив
+        store.create_zip()
 
     result = {}
 
@@ -68,6 +67,14 @@ def create():
 
 @app.route('/_set_parameters', methods=['GET', 'POST'])
 def set_parameters():
+    global store
+
+    # загружаем базу данных в переменную
+    with open(u'data/store.p', u'r') as f:
+        store = pickle.load(f)
+
+    store.parameters = Parameters()
+
     parameters_from_client = flask.request.json
     # print parameters_from_client['list1']['features']['reflexivity']
 
@@ -88,7 +95,7 @@ def set_parameters():
     # print store.second_list[0].name
 
     # создаем вектор одинаковых
-    # parameters.get_same(store)
+    store.parameters.same = parameters_from_client['same_features']
 
     # если листы оказались одинаковыми, нужно рандомно разделить их
     store.split()

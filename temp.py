@@ -9,20 +9,7 @@ import pickle
 #
 # print store.verbs[0].features
 
-print type(0.1) == float
+a = [0, 1, 2, None]
 
-
-class Parameters:
-    def __init__(self):
-        self.first_list = None
-        self.second_list = None
-        self.length = 800
-        self.differ = 0
-        self.statistics = None
-        self.same = []
-
-    def get_same(self, store):
-        for i in xrange(9):
-            if i != store.differ - 1:
-                self.same.append(i)
+print sorted(a)
 

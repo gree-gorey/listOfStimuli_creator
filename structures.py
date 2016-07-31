@@ -23,6 +23,7 @@ class Store:
         self.second_list_output = []
         self.minimum = None
         self.length = 0
+        self.frequency = 'off'
         self.number_of_same = 0
         self.allow = True
         self.same = []
@@ -32,36 +33,51 @@ class Store:
         self.p_values = []
         self.time_begin = None
         self.success = True
+        self.numeric_features = [
+            "name_agreement_percent",
+            "name_agreement_abs",
+            "subjective_complexity",
+            # "objective_complexity",
+            "familiarity",
+            "age",
+            "imageability",
+            "image_agreement",
+            "frequency",
+            "syllables",
+            "phonemes"
+        ]
+        self.parameters = Parameters()
 
     def generate(self):
         while self.sharp():
             # считаем сколько времени прошло и убиваем
             time_current = time.time()
-            if time_current - self.time_begin > 10:
+            if time_current - self.time_begin > 20:
                 self.success = False
                 break
 
+            # сбрасывем листы и аутпут, добавляем в аутпут по одному случайному слову
             self.add_first()
 
-            # self.allow = [True in xrange(self.number_of_same)]
             self.allow = True
 
-            # while sum(self.allow) == self.number_of_same and self.less():
-
+            # пока длина аутпута не превышает требуемой
             while self.allow and self.less():
                 time_current = time.time()
-                if time_current - self.time_begin > 10:
+                if time_current - self.time_begin > 20:
                     self.success = False
                     break
 
+                # начинаем добавлять слова с ближайшими векторами
                 self.add_closest()
+                # как только размер листа больше 5, начинаем проверять
                 if len(self.first_list_output) > 5:
                     self.test_and_fix()
 
     def final_statistics(self):
-        for i in xrange(9):
-            p_value = self.test([word.features[i] for word in self.first_list_output],
-                                [word.features[i] for word in self.second_list_output])
+        for numeric_feature in self.numeric_features:
+            p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
+                                [word.features[numeric_feature] for word in self.second_list_output])
 
             self.p_values.append(p_value)
 
@@ -83,7 +99,7 @@ class Store:
             self.verbs[-1].features['name_agreement_percent'] = float(line[3])
             self.verbs[-1].features['name_agreement_abs'] = float(line[4])
             self.verbs[-1].features['subjective_complexity'] = float(line[5])
-            self.verbs[-1].features['objective_complexity'] = None if '-' in line[6] else float(line[6])
+            # self.verbs[-1].features['objective_complexity'] = None if '-' in line[6] else float(line[6])
             self.verbs[-1].features['familiarity'] = float(line[7])
             self.verbs[-1].features['age'] = float(line[8])
             self.verbs[-1].features['imageability'] = float(line[9])
@@ -110,7 +126,7 @@ class Store:
             self.nouns[-1].features['name_agreement_percent'] = float(line[2])
             self.nouns[-1].features['name_agreement_abs'] = float(line[3])
             self.nouns[-1].features['subjective_complexity'] = float(line[4])
-            self.nouns[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
+            # self.nouns[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
             self.nouns[-1].features['familiarity'] = float(line[6])
             self.nouns[-1].features['age'] = float(line[7])
             self.nouns[-1].features['imageability'] = float(line[8])
@@ -153,35 +169,32 @@ class Store:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
-        head = u'Доминантная номинация\tУстойчивость номинации\tСубъективная сложность\tЗнакомство с объектом\t' \
-               u'Возраст усвоения\tПредставимость\tСхожесть образа с рисунком\tЧастотность\tДлина в слогах\t' \
-               u'Длина в фонемах\n'
-        with codecs.open(u'list_1.csv', u'w', u'utf-8') as w:
-            w.write(head)
+        first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        with codecs.open(u'list_1.tsv', u'w', u'utf-8') as w:
+            w.write(first_list_head)
             for word in self.first_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
+                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
-        with codecs.open(u'list_2.csv', u'w', u'utf-8') as w:
-            w.write(head)
+        second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        with codecs.open(u'list_2.tsv', u'w', u'utf-8') as w:
+            w.write(second_list_head)
             for word in self.second_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(f) for f in word.features]) + u'\n')
+                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
-        stat_head = u'Характеристика\tУстойчивость номинации\tСубъективная сложность\tЗнакомство с объектом\t' \
-                    u'Возраст усвоения\tПредставимость\tСхожесть образа с рисунком\tЧастотность\tДлина в слогах\t' \
-                    u'Длина в фонемах\n'
+        stat_head = '\t'.join(self.numeric_features) + '\r\n'
 
-        with codecs.open(u'statistics.csv', u'w', u'utf-8') as w:
+        with codecs.open(u'statistics.tsv', u'w', u'utf-8') as w:
             w.write(stat_head)
-            w.write(u'p-value\t' + u'\t'.join([str(p) for p in self.p_values]) + u'\n')
+            w.write(u'p-value\t' + u'\t'.join([str(p) for p in self.p_values]) + u'\r\n')
 
         z = zipfile.ZipFile(u'results.zip', u'w')
-        z.write(u'list_1.csv')
-        z.write(u'list_2.csv')
-        z.write(u'statistics.csv')
+        z.write(u'list_1.tsv')
+        z.write(u'list_2.tsv')
+        z.write(u'statistics.tsv')
 
-        os.remove(u'list_1.csv')
-        os.remove(u'list_2.csv')
-        os.remove(u'statistics.csv')
+        os.remove(u'list_1.tsv')
+        os.remove(u'list_2.tsv')
+        os.remove(u'statistics.tsv')
 
     def test_and_fix(self):
         for i in self.same:
@@ -215,13 +228,6 @@ class Store:
 
             if p_value_same < 0.15:
                 self.allow = False
-
-                # for k in self.same:
-                #     p_value_same = self.test([word.normalized_features[k] for word in self.first_list_output],
-                #                              [word.normalized_features[k] for word in self.second_list_output])
-                #
-                #     if p_value_same < 0.05:
-                #         self.allow = False
 
     def high_low(self, high, low):
         high_sorted = sorted(high, reverse=True)
@@ -281,28 +287,26 @@ class Store:
             self.second_list = []
             self.second_list += new[len(new)/2:]
 
-    def setup_parameters(self, parameters):
-        self.same = parameters.same
+    def setup_parameters(self):
+        self.same = self.parameters.same
         self.number_of_same = len(self.same)
-        self.length = parameters.length
-        self.statistics = parameters.statistics
-        self.freq = parameters.freq
-        # print len(self.first_list[0].normalized_features), u'длина нормализованных фич'
+        self.length = self.parameters.length
+        self.statistics = self.parameters.statistics
+        self.frequency = self.parameters.frequency
         for word in self.first_list:
-            word.same = [word.normalized_features[i] for i in self.same]
-            # word.diff = word.normalized_features[different]
+            # это массив из значений фич, которые не должны отличаться
+            word.same = [word.normalized_features[key] for key in self.same]
         for word in self.second_list:
-            word.same = [word.normalized_features[i] for i in self.same]
+            word.same = [word.normalized_features[key] for key in self.same]
 
-        if self.freq == 1:
+        if self.frequency == 'on':
             self.change_frequency()
 
     def change_frequency(self):
         for word in self.first_list:
-            word.features[6] = word.log_freq
+            word.features['frequency'] = word.log_freq
         for word in self.second_list:
-            word.features[6] = word.log_freq
-        # print u'done freq'
+            word.features['frequency'] = word.log_freq
 
     def add_first(self):
         self.first_list += self.first_list_output
@@ -311,28 +315,40 @@ class Store:
         self.first_list_output = []
         self.second_list_output = []
 
+        # вытаскиваем случайное слово из листа
         index = random.randint(0, len(self.first_list)-1)
         self.first_list_output.append(self.first_list[index])
         del self.first_list[index]
 
+        # вытаскиваем случайное слово из листа
         index = random.randint(0, len(self.second_list)-1)
         self.second_list_output.append(self.second_list[index])
         del self.second_list[index]
 
     def add_closest(self):
+        # вектор расстояния до другого листа
         distance_for_first_list = []
         for i in xrange(self.number_of_same):
+            # длина этого массива равна длине массива одинаковых фич
+            # значения -- это среднее значение фичи по всем словам второго листа
             distance_for_first_list.append(mean([word.same[i] for word in self.second_list_output]))
+        # задираем максимальо минимум (максимальное значение это длина массива одинаковых фич,
+        # т.к. все они максимум по 1
         minimum = self.number_of_same
         index = 0
+        # обходим первый лист и ищем слово с ближайшим вектором
         for i in xrange(len(self.first_list)):
+            # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
             from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
+            # находим среди всех минимум и запоминаем индекс
             if from_distance < minimum:
                 minimum = from_distance
                 index = i
+        # добавляем найденное слово в аутпут и удаляем из листа
         self.first_list_output.append(self.first_list[index])
         del self.first_list[index]
 
+        # повторяем те же действия для второго листа
         distance_for_second_list = []
         for i in xrange(self.number_of_same):
             distance_for_second_list.append(mean([word.same[i] for word in self.first_list_output]))
@@ -356,11 +372,12 @@ class Store:
         return len(self.first_list_output) == self.length
 
     def test(self, arr1, arr2):
-        if self.statistics == 1:
+        p_value = 0
+        if self.statistics == 'student':
             p_value = stats.ttest_ind(arr1, arr2)[1]
-        elif self.statistics == 2:
+        elif self.statistics == 'welch':
             p_value = stats.ttest_ind(arr1, arr2, False)[1]
-        elif self.statistics == 3:
+        elif self.statistics == 'mann':
             if equal(arr1, arr2):
                 p_value = 1
             else:
@@ -379,7 +396,8 @@ class Word:
             'relation': None
         }
         self.normalized_features = dict()
-        self.same = 0
+        # это массив из значений фич, которые не должны отличаться
+        self.same = []
         self.value_of_differ_feature = 0
         self.distance = 1
         self.vector = []
@@ -395,6 +413,15 @@ class Word:
         return self.value_of_differ_feature == other.value_of_differ_feature
 
 
+class Parameters:
+    def __init__(self):
+        self.same = []
+        self.differ = ''
+        self.length = 800
+        self.statistics = None
+        self.frequency = None
+
+
 def equal(arr1, arr2):
     ref = arr1[0]
     for el in arr1[2:] + arr2:
@@ -404,6 +431,10 @@ def equal(arr1, arr2):
 
 
 def mean(arr):
+    # vector_without_none = []
+    # for value in arr:
+    #     if value is not None:
+    #         vector_without_none.append(value)
     return sum(arr)/len(arr) if len(arr) > 0 else None
 
 

@@ -136,11 +136,11 @@ var parameters = {
                 "value": null,
                 "categorical": false
             },
-            "objective_complexity": {
-                "matters": false,
-                "value": null,
-                "categorical": false
-            },
+            // "objective_complexity": {
+            //     "matters": false,
+            //     "value": null,
+            //     "categorical": false
+            // },
             "familiarity": {
                 "matters": false,
                 "value": null,
@@ -194,7 +194,7 @@ var numeric = [
     "name_agreement_percent",
     "name_agreement_abs",
     "subjective_complexity",
-    "objective_complexity",
+    // "objective_complexity",
     "familiarity",
     "age",
     "imageability",
