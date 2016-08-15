@@ -38,7 +38,7 @@ def create():
 
     parameters_from_client = flask.request.json
 
-    time.sleep(2)
+    # time.sleep(2)
 
     store.parameters.length = int(parameters_from_client['length'])
     store.parameters.statistics = parameters_from_client['statistics']
@@ -97,6 +97,12 @@ def set_parameters():
         store.differentiate()
     # print len(store.first_list)
     # print store.second_list[0].name
+
+    # устанавливаем отличающийся параметр
+    store.parameters.differ = parameters_from_client['differ_feature']
+
+    # устанавливаем bonferroni
+    store.parameters.bonferroni = parameters_from_client['bonferroni']
 
     # создаем вектор одинаковых
     store.parameters.same = parameters_from_client['same_features']

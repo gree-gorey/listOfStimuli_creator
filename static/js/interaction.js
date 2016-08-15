@@ -238,6 +238,8 @@ function setParameters() {
 
     parameters["which_is_higher"] = document.getElementById("which_is_higher").value;
 
+    parameters["bonferroni"] = document.getElementById("bonferroni").value;
+
 
     if ($.inArray(parameters["differ_feature"], parameters["same_features"]) != -1) {
         let message = document.getElementById('message');

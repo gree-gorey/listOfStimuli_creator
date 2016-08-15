@@ -15,16 +15,16 @@
 
     <!-- FONT
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic,cyrillic-ext" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font.css') }}" rel="stylesheet">
 
     <!-- CSS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/w3.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 
     <!-- JS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
 
     <!-- Favicon
@@ -311,6 +311,13 @@
                         <option value="question">-- высокие значения у листа --</option>
                         <option value="first">Высокие значения у Листа №1</option>
                         <option value="second">Высокие значения у Листа №2</option>
+                    </select>
+                </div>
+                <span>Использовать поправку Бонферрони:</span><br>
+                <div class="verb-features">
+                    <select id="bonferroni" class="verb-features__select">
+                        <option value="off">-- не использовать поправку Бонферрони --</option>
+                        <option value="on">Использовать поправку Бонферрони</option>
                     </select>
                 </div>
             </div>

@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 
-import pickle
+from scipy import stats
 
+a = [0, 1, 2, 4]
 
-# # загружаем базу данных в переменную
-# with open(u'data/store.p', u'r') as f:
-#     store = pickle.load(f)
+b = [0, 1, 2, 8]
+
 #
-# print store.verbs[0].features
+# p = stats.levene(a, b)[1]
 
-a = [0, 1, 2, None]
+p = stats.shapiro(b)[1]
 
-print sorted(a)
+print p
+
+
 

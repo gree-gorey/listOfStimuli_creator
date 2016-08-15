@@ -201,7 +201,8 @@ class Store:
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
                                      [word.normalized_features[i] for word in self.second_list_output])
 
-            if p_value_same < 0.2:
+            # if p_value_same < 0.2:
+            if p_value_same < self.parameters.alpha * 4:
                 # while p_value_same < 0.06:
                 if self.equal():
                     self.first_list.append(self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1)))
@@ -226,7 +227,8 @@ class Store:
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
                                      [word.normalized_features[i] for word in self.second_list_output])
 
-            if p_value_same < 0.15:
+            # if p_value_same < 0.15:
+            if p_value_same < self.parameters.alpha * 3:
                 self.allow = False
 
     def high_low(self, high, low):
@@ -288,6 +290,9 @@ class Store:
             self.second_list += new[len(new)/2:]
 
     def setup_parameters(self):
+        if self.parameters.bonferroni != 'off':
+            self.parameters.calculate_alpha()
+
         self.same = self.parameters.same
         self.number_of_same = len(self.same)
         self.length = self.parameters.length
@@ -373,7 +378,23 @@ class Store:
 
     def test(self, arr1, arr2):
         p_value = 0
-        if self.statistics == 'student':
+        if self.statistics == 'auto':
+            # проверяем Левеном на равенство дисперсий. Если равны
+            if stats.levene(arr1, arr2)[1] > 0.05:
+                # Шапир на нормальность выборок. Если нормальные
+                if stats.shapiro(arr1)[1] > 0.05 and stats.shapiro(arr2)[1] > 0.05:
+                    # p = Student
+                    p_value = stats.ttest_ind(arr1, arr2)[1]
+                else:
+                    # p = Mann
+                    if equal(arr1, arr2):
+                        p_value = 1
+                    else:
+                        p_value = stats.mannwhitneyu(arr1, arr2)[1]
+            else:
+                p_value = stats.ttest_ind(arr1, arr2, False)[1]
+
+        elif self.statistics == 'student':
             p_value = stats.ttest_ind(arr1, arr2)[1]
         elif self.statistics == 'welch':
             p_value = stats.ttest_ind(arr1, arr2, False)[1]
@@ -420,6 +441,17 @@ class Parameters:
         self.length = 800
         self.statistics = None
         self.frequency = None
+        self.alpha = 0.05
+        self.number_of_comparisons = 0
+        self.bonferroni = 'off'
+
+    def calculate_alpha(self):
+        if self.differ != 'question':
+            self.number_of_comparisons = len(self.same) + 1
+        else:
+            self.number_of_comparisons = len(self.same)
+
+        self.alpha /= self.number_of_comparisons
 
 
 def equal(arr1, arr2):
