@@ -26,6 +26,7 @@
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/interaction.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 
     <!-- Favicon
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -59,7 +60,9 @@
                 <option value="off">Не требуется</option>
             </select>
             <button class="w3-btn stat-btn" onClick="createLists();">Создать листы</button><br>
-            <a class="w3-btn" href="/">< В начало</a>
+            <a class="w3-btn" href="/">< В начало</a><br>
+            <!--<a class="w3-btn" href="/_exit">Quit</a>-->
+            <button class="w3-btn stat-btn" onClick="close_app();">Остановить приложение</button>
         </div>
     </div>
 </div>

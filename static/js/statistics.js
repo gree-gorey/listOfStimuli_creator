@@ -1,6 +1,6 @@
-window.onbeforeunload = function() {
-  return 'ВНИМАНИЕ!\nВсе несохранённые данные будут потеряны!';
-};
+// window.onbeforeunload = function() {
+//   return 'ВНИМАНИЕ!\nВсе несохранённые данные будут потеряны!';
+// };
 
 function createLists() {
     var statisticsParameters = {};
@@ -60,4 +60,16 @@ function showSuccessMessage() {
 function hideSuccessMessage() {
     var modal = document.getElementById('successMessage');
     modal.style.display = "none";
+}
+
+function close_app() {
+    var html = '<div class="w3-container"><div class="w3-row greeting">Вы успешно вышли из приложения.</div></div>';
+
+    $.ajax({
+        url: '_exit',
+        type: 'post'
+    });
+    // window.location = '/';
+    // window.close();
+    window.document.body.innerHTML = html;
 }

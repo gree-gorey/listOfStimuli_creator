@@ -3,6 +3,8 @@
 import time
 import flask
 import pickle
+import webbrowser
+import threading
 from structures import Parameters, Store
 
 __author__ = 'gree-gorey'
@@ -115,9 +117,19 @@ def set_parameters():
     return flask.jsonify(result=result)
 
 
+@app.route('/_exit', methods=['POST'])
+def exit_app():
+    exit()
+
+
 if __name__ == '__main__':
+    url = 'http://127.0.0.1:5000'
+
+    threading.Timer(1.25, lambda: webbrowser.open(url)).start()
+
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        debug=True
+        # debug=True
     )
+

@@ -74,12 +74,12 @@ input[type=number] {
 }
 
 .stat-select {
-    width: 370px;
+    width: 390px;
     margin-bottom: 10px;
 }
 
 input[type=number].stat-select {
-    width: 370px;
+    width: 390px;
     margin-bottom: 10px;
 }
 
