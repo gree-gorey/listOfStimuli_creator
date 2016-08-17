@@ -33,6 +33,9 @@ class Store:
         self.p_values = []
         self.time_begin = None
         self.success = True
+        self.first_list_equality_counter = dict()
+        self.second_list_equality_counter = dict()
+        self.should_append = dict()
         self.numeric_features = [
             "name_agreement_percent",
             "name_agreement_abs",
@@ -46,6 +49,13 @@ class Store:
             "syllables",
             "phonemes"
         ]
+        self.categorical_features = {
+            "arguments": ("one", "two"),
+            "reflexivity": ("on", "off"),
+            "instrumentality": ("on", "off"),
+            "relation": ("on", "off"),
+            "part": ("first", "second")
+        }
         self.parameters = Parameters()
 
     def generate(self):
@@ -122,7 +132,7 @@ class Store:
 
             self.nouns[-1].name = line[1]
 
-            self.nouns[-1].features['part'] = line[0]
+            self.nouns[-1].features['part'] = 'first' if '1' in line[0] else 'second'
             self.nouns[-1].features['name_agreement_percent'] = float(line[2])
             self.nouns[-1].features['name_agreement_abs'] = float(line[3])
             self.nouns[-1].features['subjective_complexity'] = float(line[4])
@@ -137,6 +147,22 @@ class Store:
 
             # логарифмируем частоту
             self.nouns[-1].log_freq = math.log(self.nouns[-1].features['frequency'] + 1, 10)
+
+    def create_equality_counter(self, list_parameters_from_client):
+        # создаем пустой счетчик
+        equality_counter = dict()
+
+        # обходим список категориальных
+        for feature in self.categorical_features:
+            # если у кого-то значение 50/50
+            if list_parameters_from_client['features'][feature]['value'] == 'half':
+                # создаем для данного параметра ячейку с двумя значениями, равными нулю
+                equality_counter[feature] = {
+                    self.categorical_features[feature][0]: 0,
+                    self.categorical_features[feature][1]: 0
+                }
+
+        return equality_counter
 
     def find_min_max(self, word_list):
         for word in word_list:
@@ -330,7 +356,28 @@ class Store:
         self.second_list_output.append(self.second_list[index])
         del self.second_list[index]
 
+    def set_should_append(self, list_equality_counter):
+        self.should_append = dict()
+        for feature in list_equality_counter:
+            keys = feature.keys
+            if feature[keys[0]] < feature[keys[1]]:
+                self.should_append[feature] = keys[0]
+            elif feature[keys[0]] > feature[keys[1]]:
+                self.should_append[feature] = keys[1]
+
     def add_closest(self):
+        # оставляем только неравные параметры, остальные неважны в этой итерации
+        self.set_should_append(self.first_list_equality_counter)
+
+        if self.should_append:
+            for word in self.first_list:
+                for feature in self.should_append:
+                    if word.features[feature] != self.should_append[feature]:
+                        word.allowed = False
+        else:
+            for word in self.first_list:
+                word.allowed = True
+
         # вектор расстояния до другого листа
         distance_for_first_list = []
         for i in xrange(self.number_of_same):
@@ -343,15 +390,28 @@ class Store:
         index = 0
         # обходим первый лист и ищем слово с ближайшим вектором
         for i in xrange(len(self.first_list)):
-            # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
-            from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
-            # находим среди всех минимум и запоминаем индекс
-            if from_distance < minimum:
-                minimum = from_distance
-                index = i
+            if self.first_list[i].allowed:
+                # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
+                from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
+                # находим среди всех минимум и запоминаем индекс
+                if from_distance < minimum:
+                    minimum = from_distance
+                    index = i
         # добавляем найденное слово в аутпут и удаляем из листа
         self.first_list_output.append(self.first_list[index])
         del self.first_list[index]
+
+        # оставляем только неравные параметры, остальные неважны в этой итерации
+        self.set_should_append(self.second_list_equality_counter)
+
+        if self.should_append:
+            for word in self.second_list:
+                for feature in self.should_append:
+                    if word.features[feature] != self.should_append[feature]:
+                        word.allowed = False
+        else:
+            for word in self.second_list:
+                word.allowed = True
 
         # повторяем те же действия для второго листа
         distance_for_second_list = []
@@ -360,10 +420,11 @@ class Store:
         minimum = self.number_of_same
         index = 0
         for i in xrange(len(self.second_list)):
-            from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
-            if from_distance < minimum:
-                minimum = from_distance
-                index = i
+            if self.second_list[i].allowed:
+                from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
+                if from_distance < minimum:
+                    minimum = from_distance
+                    index = i
         self.second_list_output.append(self.second_list[index])
         del self.second_list[index]
 
@@ -423,6 +484,7 @@ class Word:
         self.distance = 1
         self.vector = []
         self.log_freq = None
+        self.allowed = True
 
     def __gt__(self, other):
         return self.value_of_differ_feature > other.value_of_differ_feature

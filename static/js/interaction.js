@@ -219,7 +219,7 @@ function setParameters() {
         }
 
         for (let i = 0; i < categorical.length; i++) {
-            parameters[lists[j]]["features"][categorical[i]]["matters"] = document.getElementById(lists[j] + "_" + categorical[i]).value != "question";
+            parameters[lists[j]]["features"][categorical[i]]["matters"] = document.getElementById(lists[j] + "_" + categorical[i]).value != "question" || document.getElementById(lists[j] + "_" + categorical[i]).value != "half";
             parameters[lists[j]]["features"][categorical[i]]["value"] = document.getElementById(lists[j] + "_" + categorical[i]).value;
         }
 
