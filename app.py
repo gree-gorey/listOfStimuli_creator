@@ -106,6 +106,8 @@ def create():
     # собственно генерация листов
     store.generate()
 
+    print store.first_list_equality_counter
+
     if store.success:
         result['feedback'] = 'success'
 
@@ -129,6 +131,6 @@ if __name__ == '__main__':
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        # debug=True
+        debug=True
     )
 

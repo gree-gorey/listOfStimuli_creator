@@ -27,3 +27,10 @@
 # url = "http://127.0.0.1:5000"
 # webbrowser.open(url, new=new)
 
+import numpy as np
+
+a = [0, 1, 2]
+
+print np.std(a)
+
+

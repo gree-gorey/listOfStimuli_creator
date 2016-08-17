@@ -7,6 +7,7 @@ import random
 import codecs
 import zipfile
 from scipy import stats
+import numpy as np
 
 __author__ = 'gree-gorey'
 
@@ -56,6 +57,8 @@ class Store:
             "relation": ("on", "off"),
             "part": ("first", "second")
         }
+        self.len_of_numeric = len(self.numeric_features)
+        self.len_of_categorical = len(self.categorical_features)
         self.parameters = Parameters()
 
     def generate(self):
@@ -83,13 +86,6 @@ class Store:
                 # как только размер листа больше 5, начинаем проверять
                 if len(self.first_list_output) > 5:
                     self.test_and_fix()
-
-    def final_statistics(self):
-        for numeric_feature in self.numeric_features:
-            p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
-                                [word.features[numeric_feature] for word in self.second_list_output])
-
-            self.p_values.append(p_value)
 
     def print_results(self):
         print '\n######################################\n'
@@ -207,11 +203,10 @@ class Store:
             for word in self.second_list_output:
                 w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
-        stat_head = '\t'.join(self.numeric_features) + '\r\n'
+        stat_table = self.create_final_table()
 
         with codecs.open(u'statistics.tsv', u'w', u'utf-8') as w:
-            w.write(stat_head)
-            w.write(u'p-value\t' + u'\t'.join([str(p) for p in self.p_values]) + u'\r\n')
+            w.write(stat_table)
 
         z = zipfile.ZipFile(u'results.zip', u'w')
         z.write(u'list_1.tsv')
@@ -222,6 +217,186 @@ class Store:
         os.remove(u'list_2.tsv')
         os.remove(u'statistics.tsv')
 
+    def create_table_per_list(self, list_output, list_name):
+        table_per_list = ''
+
+        list_features = dict()
+
+        for feature in self.numeric_features:
+            list_features[feature] = [word.features[feature] for word in list_output]
+
+        means = [str(np.mean(list_features[feature])) for feature in self.numeric_features]
+
+        list1_mean = list_name + '\tmean\t' + '\t'.join(means) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        table_per_list += list1_mean
+
+        mins = [str(np.min(list_features[feature])) for feature in self.numeric_features]
+
+        list1_min = '\tmin\t' + '\t'.join(mins) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        table_per_list += list1_min
+
+        maxes = [str(np.max(list_features[feature])) for feature in self.numeric_features]
+
+        list1_max = '\tmax\t' + '\t'.join(maxes) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        table_per_list += list1_max
+
+        sd = [str(np.std(list_features[feature])) for feature in self.numeric_features]
+
+        list1_sd = '\tSD\t' + '\t'.join(sd) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        table_per_list += list1_sd
+
+        ratios = list()
+
+        for feature in self.categorical_features:
+            ratio = {
+                self.categorical_features[feature][0]: 0,
+                self.categorical_features[feature][1]: 0
+            }
+
+            for word in list_output:
+                if word.features[feature] in self.categorical_features[feature]:
+                    ratio[word.features[feature]] += 1
+                else:
+                    ratio = None
+                    break
+
+            ratios.append(ratio)
+
+        ratio_string = ''
+        for ratio in ratios:
+            ratio_string += '\t'
+            if ratio is None:
+                ratio_string += 'None'
+            else:
+                for key in ratio:
+                    string = key + ': ' + str(ratio[key]) + '; '
+                    ratio_string += string
+
+        list1_ratio = '\tratio\t' + '\t'.join(['None'] * self.len_of_numeric) + ratio_string + '\r\n'
+        table_per_list += list1_ratio
+
+        return table_per_list
+
+    def create_stat_table(self):
+        stat_table = ''
+
+        test_name = 'statistics\ttest name\tMann\tStudent\r\n'
+        stat_table += test_name
+
+        return stat_table
+
+    def create_final_table(self):
+        table = ''
+        header = '\t\t' + '\t'.join(self.numeric_features) + '\t' + '\t'.join(self.categorical_features) + '\r\n'
+        table += header
+
+        table += self.create_table_per_list(self.first_list_output, 'list 1')
+        table += '\r\n'
+        table += self.create_table_per_list(self.second_list_output, 'list 2')
+        table += '\r\n'
+
+        table += self.create_stat_table()
+
+        return table
+
+    def final_statistics(self):
+        for numeric_feature in self.numeric_features:
+            p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
+                                [word.features[numeric_feature] for word in self.second_list_output])
+
+            self.p_values.append(p_value)
+
+    def compensate(self, first_list_mean, second_list_mean, i):
+        # print 777
+
+        # если это среднее больше в первом листе
+        if first_list_mean > second_list_mean:
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.first_list_equality_counter)
+
+            if self.should_append:
+                for word in self.first_list:
+                    for feature in self.should_append:
+                        if word.features[feature] != self.should_append[feature]:
+                            word.allowed = False
+            else:
+                for word in self.first_list:
+                    word.allowed = True
+
+            lowest_from_rest = 1
+            first_list_index = 0
+            for j, word in enumerate(self.first_list):
+                if word.allowed:
+                    if word.normalized_features[i] < lowest_from_rest:
+                        lowest_from_rest = word.normalized_features[i]
+                        first_list_index = j
+
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.second_list_equality_counter)
+
+            if self.should_append:
+                for word in self.second_list:
+                    for feature in self.should_append:
+                        if word.features[feature] != self.should_append[feature]:
+                            word.allowed = False
+            else:
+                for word in self.first_list:
+                    word.allowed = True
+
+            highest_from_rest = 0
+            second_list_index = 0
+            for j, word in enumerate(self.second_list):
+                if word.allowed:
+                    if word.normalized_features[i] > highest_from_rest:
+                        highest_from_rest = word.normalized_features[i]
+                        second_list_index = j
+
+        else:
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.second_list_equality_counter)
+
+            if self.should_append:
+                for word in self.second_list:
+                    for feature in self.should_append:
+                        if word.features[feature] != self.should_append[feature]:
+                            word.allowed = False
+            else:
+                for word in self.first_list:
+                    word.allowed = True
+
+            lowest_from_rest = 1
+            second_list_index = 0
+            for j, word in enumerate(self.second_list):
+                if word.allowed:
+                    if word.normalized_features[i] < lowest_from_rest:
+                        lowest_from_rest = word.normalized_features[i]
+                        second_list_index = j
+
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.first_list_equality_counter)
+
+            if self.should_append:
+                for word in self.first_list:
+                    for feature in self.should_append:
+                        if word.features[feature] != self.should_append[feature]:
+                            word.allowed = False
+            else:
+                for word in self.first_list:
+                    word.allowed = True
+
+            highest_from_rest = 0
+            first_list_index = 0
+            for j, word in enumerate(self.first_list):
+                if word.allowed:
+                    if word.normalized_features[i] > highest_from_rest:
+                        highest_from_rest = word.normalized_features[i]
+                        first_list_index = j
+
+        self.first_list_output.append(self.first_list[first_list_index])
+        del self.first_list[first_list_index]
+        self.second_list_output.append(self.second_list[second_list_index])
+        del self.second_list[second_list_index]
+
     def test_and_fix(self):
         for i in self.same:
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
@@ -230,25 +405,23 @@ class Store:
             # if p_value_same < 0.2:
             if p_value_same < self.parameters.alpha * 4:
                 # while p_value_same < 0.06:
-                if self.equal():
-                    self.first_list.append(self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1)))
-                    self.second_list.append(self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1)))
 
+                # если листы достигли нужной пользователю длины
+                if self.equal():
+                    print 888
+
+                    # возвращаем по одному слову из аутпута в общий лист
+                    first_list_to_pop = self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1))
+                    second_list_to_pop = self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1))
+
+                    self.first_list.append(first_list_to_pop)
+                    self.second_list.append(second_list_to_pop)
+
+                # по всем словам в аутпуте считаем среднее параметра i
                 first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
                 second_list_mean = mean([word.normalized_features[i] for word in self.second_list_output])
 
-                if first_list_mean > second_list_mean:
-                    hhh, lll = compensate(self.first_list, self.second_list, i)
-                    self.first_list_output.append(self.first_list[hhh])
-                    del self.first_list[hhh]
-                    self.second_list_output.append(self.second_list[lll])
-                    del self.second_list[lll]
-                else:
-                    hhh, lll = compensate(self.second_list, self.first_list, i)
-                    self.first_list_output.append(self.first_list[lll])
-                    del self.first_list[lll]
-                    self.second_list_output.append(self.second_list[hhh])
-                    del self.second_list[hhh]
+                self.compensate(first_list_mean, second_list_mean, i)
 
             p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
                                      [word.normalized_features[i] for word in self.second_list_output])
@@ -348,26 +521,47 @@ class Store:
 
         # вытаскиваем случайное слово из листа
         index = random.randint(0, len(self.first_list)-1)
-        self.first_list_output.append(self.first_list[index])
+
+        word = self.first_list[index]
+
+        # прибавляем параметры добавленного слова в счетчик
+        for feature in self.first_list_equality_counter:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.first_list_equality_counter[feature]:
+                self.first_list_equality_counter[feature][word.features[feature]] += 1
+
+        self.first_list_output.append(word)
         del self.first_list[index]
 
         # вытаскиваем случайное слово из листа
         index = random.randint(0, len(self.second_list)-1)
-        self.second_list_output.append(self.second_list[index])
+
+        word = self.second_list[index]
+
+        # прибавляем параметры добавленного слова в счетчик
+        for feature in self.second_list_equality_counter:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.second_list_equality_counter[feature]:
+                self.second_list_equality_counter[feature][word.features[feature]] += 1
+
+        self.second_list_output.append(word)
         del self.second_list[index]
 
     def set_should_append(self, list_equality_counter):
         self.should_append = dict()
         for feature in list_equality_counter:
-            keys = feature.keys
-            if feature[keys[0]] < feature[keys[1]]:
+            keys = list_equality_counter[feature].keys()
+            if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
                 self.should_append[feature] = keys[0]
-            elif feature[keys[0]] > feature[keys[1]]:
+            elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
                 self.should_append[feature] = keys[1]
 
     def add_closest(self):
         # оставляем только неравные параметры, остальные неважны в этой итерации
         self.set_should_append(self.first_list_equality_counter)
+
+        # print self.first_list_equality_counter
+        # print self.should_append
 
         if self.should_append:
             for word in self.first_list:
@@ -384,10 +578,27 @@ class Store:
             # длина этого массива равна длине массива одинаковых фич
             # значения -- это среднее значение фичи по всем словам второго листа
             distance_for_first_list.append(mean([word.same[i] for word in self.second_list_output]))
+
+        # index_changed = False
+
+        # allowed = 0
+        #
+        # for word in self.first_list:
+        #     if word.allowed:
+        #         allowed += 1
+        #
+        # print allowed
+
+        index = 0
+        for i, word in enumerate(self.first_list):
+            if word.allowed:
+                index = i
+                # index_changed = True
+                break
+
         # задираем максимальо минимум (максимальное значение это длина массива одинаковых фич,
         # т.к. все они максимум по 1
         minimum = self.number_of_same
-        index = 0
         # обходим первый лист и ищем слово с ближайшим вектором
         for i in xrange(len(self.first_list)):
             if self.first_list[i].allowed:
@@ -397,8 +608,24 @@ class Store:
                 if from_distance < minimum:
                     minimum = from_distance
                     index = i
+
+        word = self.first_list[index]
+
+        # if self.should_append:
+        #     for feature in self.should_append:
+        #         if word.features[feature] != self.should_append[feature]:
+        #             print index_changed
+
         # добавляем найденное слово в аутпут и удаляем из листа
-        self.first_list_output.append(self.first_list[index])
+        self.first_list_output.append(word)
+
+        # прибавляем параметры добавленного слова в счетчик
+        for feature in self.first_list_equality_counter:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.first_list_equality_counter[feature]:
+                # print word.features[feature]
+                self.first_list_equality_counter[feature][word.features[feature]] += 1
+
         del self.first_list[index]
 
         # оставляем только неравные параметры, остальные неважны в этой итерации
@@ -413,19 +640,35 @@ class Store:
             for word in self.second_list:
                 word.allowed = True
 
+        index = 0
+        for i, word in enumerate(self.second_list):
+            if word.allowed:
+                index = i
+                break
+
         # повторяем те же действия для второго листа
         distance_for_second_list = []
         for i in xrange(self.number_of_same):
             distance_for_second_list.append(mean([word.same[i] for word in self.first_list_output]))
-        minimum = self.number_of_same
-        index = 0
+        minimum = self.number_of_same + 1
         for i in xrange(len(self.second_list)):
             if self.second_list[i].allowed:
                 from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
                 if from_distance < minimum:
                     minimum = from_distance
                     index = i
-        self.second_list_output.append(self.second_list[index])
+
+        word = self.second_list[index]
+
+        # добавляем найденное слово в аутпут и удаляем из листа
+        self.second_list_output.append(word)
+
+        # прибавляем параметры добавленного слова в счетчик
+        for feature in self.second_list_equality_counter:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.second_list_equality_counter[feature]:
+                self.second_list_equality_counter[feature][word.features[feature]] += 1
+
         del self.second_list[index]
 
     def sharp(self):
@@ -530,24 +773,6 @@ def mean(arr):
     #     if value is not None:
     #         vector_without_none.append(value)
     return sum(arr)/len(arr) if len(arr) > 0 else None
-
-
-def compensate(higher, lower, i):
-    lowest_from_rest = 1
-    first_list_index = 0
-    for j in xrange(len(higher)):
-        if higher[j].normalized_features[i] < lowest_from_rest:
-            lowest_from_rest = higher[j].normalized_features[i]
-            first_list_index = j
-
-    highest_from_rest = 0
-    second_list_index = 0
-    for j in xrange(len(lower)):
-        if lower[j].normalized_features[i] > highest_from_rest:
-            highest_from_rest = lower[j].normalized_features[i]
-            second_list_index = j
-
-    return first_list_index, second_list_index
 
 
 def is_match(database_word, client_word_parameters):
