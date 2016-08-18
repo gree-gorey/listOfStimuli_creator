@@ -47,7 +47,7 @@
       }, 
       "reflexivity": {
         "matters": false, 
-        "value": "question", 
+        "value": "half",
         "categorical": true
       }, 
       "name_agreement_percent": {
@@ -75,7 +75,7 @@
       }, 
       "arguments": {
         "matters": false, 
-        "value": "half", 
+        "value": "question",
         "categorical": true
       }, 
       "subjective_complexity": {

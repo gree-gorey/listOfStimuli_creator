@@ -7,7 +7,8 @@ import pickle
 import codecs
 import webbrowser
 import threading
-from structures import Parameters, Store
+from store import Store
+from parameters import Parameters
 
 __author__ = 'gree-gorey'
 
@@ -118,9 +119,6 @@ def create():
 
     if store.success:
         result['feedback'] = 'success'
-
-        # для печати результатов
-        store.print_results()
 
         # создаем файлы и пакуем в архив
         store.create_zip()

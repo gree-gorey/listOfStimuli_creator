@@ -4,7 +4,8 @@ import time
 import json
 import pickle
 import codecs
-from structures import Parameters, Store
+from parameters import Parameters
+from store import Store
 
 __author__ = 'gree-gorey'
 

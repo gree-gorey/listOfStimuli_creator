@@ -2,7 +2,7 @@
 
 import codecs
 import pickle
-from structures import Store
+from store import Store
 
 __author__ = 'gree-gorey'
 

@@ -38,7 +38,8 @@ class Store:
         self.success = True
         self.first_list_equality_counter = dict()
         self.second_list_equality_counter = dict()
-        self.should_append = dict()
+        self.should_append_first = dict()
+        self.should_append_second = dict()
         self.numeric_features = [
             "name_agreement_percent",
             "name_agreement_abs",
@@ -63,8 +64,23 @@ class Store:
         self.len_of_categorical = len(self.categorical_features)
         self.parameters = Parameters()
 
+    def reset_counters(self):
+        for feature, parameters in self.first_list_equality_counter.iteritems():
+            for parameter, value in parameters.iteritems():
+                parameters[parameter] = 0
+        for feature, parameters in self.second_list_equality_counter.iteritems():
+            for parameter, value in parameters.iteritems():
+                parameters[parameter] = 0
+
+        # print '\n#####\nCounters were reset'
+        # print self.first_list_equality_counter
+
     def generate(self):
         while self.sharp():
+
+            # Сбрасываем счетчики для 50/50
+            self.reset_counters()
+
             # считаем сколько времени прошло и убиваем
             time_current = time.time()
             if time_current - self.time_begin > 20:
@@ -301,22 +317,167 @@ class Store:
 
         return table
 
+    def set_should_append(self, list_equality_counter, list_name):
+        if list_name == 'first':
+            self.should_append_first = dict()
+            for feature in list_equality_counter:
+                keys = list_equality_counter[feature].keys()
+                if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
+                    self.should_append_first[feature] = keys[0]
+                elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
+                    self.should_append_first[feature] = keys[1]
+        else:
+            self.should_append_second = dict()
+            for feature in list_equality_counter:
+                keys = list_equality_counter[feature].keys()
+                if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
+                    self.should_append_second[feature] = keys[0]
+                elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
+                    self.should_append_second[feature] = keys[1]
+
+    def check_words_for_allowance(self, list_name):
+        if list_name == 'first':
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.first_list_equality_counter, 'first')
+
+            if self.should_append_first:
+                for word in self.first_list:
+                    for feature in self.should_append_first:
+                        if word.features[feature] != self.should_append_first[feature]:
+                            word.allowed = False
+            else:
+                for word in self.first_list:
+                    word.allowed = True
+
+        else:
+            # оставляем только неравные параметры, остальные неважны в этой итерации
+            self.set_should_append(self.second_list_equality_counter, 'second')
+
+            if self.should_append_second:
+                for word in self.second_list:
+                    for feature in self.should_append_second:
+                        if word.features[feature] != self.should_append_second[feature]:
+                            word.allowed = False
+            else:
+                for word in self.second_list:
+                    word.allowed = True
+
+    def add_features_into_counter(self, word, list_name):
+        if list_name == 'first':
+            for feature in self.first_list_equality_counter:
+                # если значение этого параметра есть среди значений в счетчике, то плюс 1
+                if word.features[feature] in self.first_list_equality_counter[feature]:
+                    # print word.features[feature]
+                    self.first_list_equality_counter[feature][word.features[feature]] += 1
+
+        else:
+            for feature in self.second_list_equality_counter:
+                # если значение этого параметра есть среди значений в счетчике, то плюс 1
+                if word.features[feature] in self.second_list_equality_counter[feature]:
+                    self.second_list_equality_counter[feature][word.features[feature]] += 1
+
+    def remove_features_from_counter(self, word, list_name):
+        if list_name == 'first':
+            for feature in self.first_list_equality_counter:
+                # если значение этого параметра есть среди значений в счетчике, то минус 1
+                if word.features[feature] in self.first_list_equality_counter[feature]:
+                    # print word.features[feature]
+                    self.first_list_equality_counter[feature][word.features[feature]] -= 1
+
+        else:
+            for feature in self.second_list_equality_counter:
+                # если значение этого параметра есть среди значений в счетчике, то минус 1
+                if word.features[feature] in self.second_list_equality_counter[feature]:
+                    self.second_list_equality_counter[feature][word.features[feature]] -= 1
+
+    def add_closest(self):
+        ##########
+        # LIST 1 #
+        ##########
+
+        self.check_words_for_allowance('first')
+
+        # вектор расстояния до другого листа
+        distance_for_first_list = []
+        for i in xrange(self.number_of_same):
+            # длина этого массива равна длине массива одинаковых фич
+            # значения -- это среднее значение фичи по всем словам второго листа
+            distance_for_first_list.append(mean([word.same[i] for word in self.second_list_output]))
+
+        index = 0
+        for i, word in enumerate(self.first_list):
+            if word.allowed:
+                index = i
+                break
+
+        # задираем максимальо минимум (максимальное значение это длина массива одинаковых фич,
+        # т.к. все они максимум по 1
+        minimum = self.number_of_same
+        # обходим первый лист и ищем слово с ближайшим вектором
+        for i in xrange(len(self.first_list)):
+            if self.first_list[i].allowed:
+                # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
+                from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
+                # находим среди всех минимум и запоминаем индекс
+                if from_distance < minimum:
+                    minimum = from_distance
+                    index = i
+
+        word = self.first_list[index]
+
+        # добавляем найденное слово в аутпут и удаляем из листа
+        self.first_list_output.append(word)
+
+        # прибавляем параметры добавленного слова в счетчик
+        self.add_features_into_counter(word, 'first')
+
+        del self.first_list[index]
+
+        print '\nAdd closest'
+        print 'Should append: ', self.should_append_first
+        print 'Arguments feature of added word: {}'.format(word.features['arguments'])
+        print 'Counter: ', self.first_list_equality_counter
+
+        ##########
+        # LIST 2 #
+        ##########
+
+        self.check_words_for_allowance('second')
+
+        index = 0
+        for i, word in enumerate(self.second_list):
+            if word.allowed:
+                index = i
+                break
+
+        # повторяем те же действия для второго листа
+        distance_for_second_list = []
+        for i in xrange(self.number_of_same):
+            distance_for_second_list.append(mean([word.same[i] for word in self.first_list_output]))
+        minimum = self.number_of_same + 1
+        for i in xrange(len(self.second_list)):
+            if self.second_list[i].allowed:
+                from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
+                if from_distance < minimum:
+                    minimum = from_distance
+                    index = i
+
+        word = self.second_list[index]
+
+        # добавляем найденное слово в аутпут и удаляем из листа
+        self.second_list_output.append(word)
+
+        # прибавляем параметры добавленного слова в счетчик
+        self.add_features_into_counter(word, 'second')
+
+        del self.second_list[index]
+
     def compensate(self, first_list_mean, second_list_mean, i):
         # print 777
 
         # если это среднее больше в первом листе
         if first_list_mean > second_list_mean:
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.first_list_equality_counter)
-
-            if self.should_append:
-                for word in self.first_list:
-                    for feature in self.should_append:
-                        if word.features[feature] != self.should_append[feature]:
-                            word.allowed = False
-            else:
-                for word in self.first_list:
-                    word.allowed = True
+            self.check_words_for_allowance('first')
 
             lowest_from_rest = 1
             first_list_index = 0
@@ -326,17 +487,7 @@ class Store:
                         lowest_from_rest = word.normalized_features[i]
                         first_list_index = j
 
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.second_list_equality_counter)
-
-            if self.should_append:
-                for word in self.second_list:
-                    for feature in self.should_append:
-                        if word.features[feature] != self.should_append[feature]:
-                            word.allowed = False
-            else:
-                for word in self.first_list:
-                    word.allowed = True
+            self.check_words_for_allowance('second')
 
             highest_from_rest = 0
             second_list_index = 0
@@ -347,17 +498,7 @@ class Store:
                         second_list_index = j
 
         else:
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.second_list_equality_counter)
-
-            if self.should_append:
-                for word in self.second_list:
-                    for feature in self.should_append:
-                        if word.features[feature] != self.should_append[feature]:
-                            word.allowed = False
-            else:
-                for word in self.first_list:
-                    word.allowed = True
+            self.check_words_for_allowance('second')
 
             lowest_from_rest = 1
             second_list_index = 0
@@ -367,17 +508,7 @@ class Store:
                         lowest_from_rest = word.normalized_features[i]
                         second_list_index = j
 
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.first_list_equality_counter)
-
-            if self.should_append:
-                for word in self.first_list:
-                    for feature in self.should_append:
-                        if word.features[feature] != self.should_append[feature]:
-                            word.allowed = False
-            else:
-                for word in self.first_list:
-                    word.allowed = True
+            self.check_words_for_allowance('first')
 
             highest_from_rest = 0
             first_list_index = 0
@@ -387,9 +518,21 @@ class Store:
                         highest_from_rest = word.normalized_features[i]
                         first_list_index = j
 
-        self.first_list_output.append(self.first_list[first_list_index])
+        word = self.first_list[first_list_index]
+        self.first_list_output.append(word)
+        # прибавляем параметры добавленного слова в счетчик
+        self.add_features_into_counter(word, 'first')
         del self.first_list[first_list_index]
-        self.second_list_output.append(self.second_list[second_list_index])
+
+        print '\nCompensate'
+        print 'Should append: ', self.should_append_first
+        print 'Arguments feature of added word: {}'.format(word.features['arguments'])
+        print 'Counter: ', self.first_list_equality_counter
+
+        word = self.second_list[second_list_index]
+        self.second_list_output.append(word)
+        # прибавляем параметры добавленного слова в счетчик
+        self.add_features_into_counter(word, 'second')
         del self.second_list[second_list_index]
 
     def test_and_fix(self):
@@ -406,11 +549,17 @@ class Store:
                     # print 888
 
                     # возвращаем по одному слову из аутпута в общий лист
-                    first_list_to_pop = self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1))
-                    second_list_to_pop = self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1))
+                    word_first_list_to_pop = self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1))
+                    word_second_list_to_pop = self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1))
 
-                    self.first_list.append(first_list_to_pop)
-                    self.second_list.append(second_list_to_pop)
+                    self.remove_features_from_counter(word_first_list_to_pop, 'first')
+                    self.remove_features_from_counter(word_second_list_to_pop, 'second')
+
+                    print 'Features were removed. Arguments feature of removed word: {}'.format(word_first_list_to_pop.features['arguments'])
+                    print 'Counter: ', self.first_list_equality_counter
+
+                    self.first_list.append(word_first_list_to_pop)
+                    self.second_list.append(word_second_list_to_pop)
 
                 # по всем словам в аутпуте считаем среднее параметра i
                 first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
@@ -540,130 +689,6 @@ class Store:
                 self.second_list_equality_counter[feature][word.features[feature]] += 1
 
         self.second_list_output.append(word)
-        del self.second_list[index]
-
-    def set_should_append(self, list_equality_counter):
-        self.should_append = dict()
-        for feature in list_equality_counter:
-            keys = list_equality_counter[feature].keys()
-            if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
-                self.should_append[feature] = keys[0]
-            elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
-                self.should_append[feature] = keys[1]
-
-    def add_closest(self):
-        # оставляем только неравные параметры, остальные неважны в этой итерации
-        self.set_should_append(self.first_list_equality_counter)
-
-        # print self.first_list_equality_counter
-        # print self.should_append
-
-        if self.should_append:
-            for word in self.first_list:
-                for feature in self.should_append:
-                    if word.features[feature] != self.should_append[feature]:
-                        word.allowed = False
-        else:
-            for word in self.first_list:
-                word.allowed = True
-
-        # вектор расстояния до другого листа
-        distance_for_first_list = []
-        for i in xrange(self.number_of_same):
-            # длина этого массива равна длине массива одинаковых фич
-            # значения -- это среднее значение фичи по всем словам второго листа
-            distance_for_first_list.append(mean([word.same[i] for word in self.second_list_output]))
-
-        # index_changed = False
-
-        # allowed = 0
-        #
-        # for word in self.first_list:
-        #     if word.allowed:
-        #         allowed += 1
-        #
-        # print allowed
-
-        index = 0
-        for i, word in enumerate(self.first_list):
-            if word.allowed:
-                index = i
-                # index_changed = True
-                break
-
-        # задираем максимальо минимум (максимальное значение это длина массива одинаковых фич,
-        # т.к. все они максимум по 1
-        minimum = self.number_of_same
-        # обходим первый лист и ищем слово с ближайшим вектором
-        for i in xrange(len(self.first_list)):
-            if self.first_list[i].allowed:
-                # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
-                from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
-                # находим среди всех минимум и запоминаем индекс
-                if from_distance < minimum:
-                    minimum = from_distance
-                    index = i
-
-        word = self.first_list[index]
-
-        # if self.should_append:
-        #     for feature in self.should_append:
-        #         if word.features[feature] != self.should_append[feature]:
-        #             print index_changed
-
-        # добавляем найденное слово в аутпут и удаляем из листа
-        self.first_list_output.append(word)
-
-        # прибавляем параметры добавленного слова в счетчик
-        for feature in self.first_list_equality_counter:
-            # если значение этого параметра есть среди значений в счетчике, то плюс 1
-            if word.features[feature] in self.first_list_equality_counter[feature]:
-                # print word.features[feature]
-                self.first_list_equality_counter[feature][word.features[feature]] += 1
-
-        del self.first_list[index]
-
-        # оставляем только неравные параметры, остальные неважны в этой итерации
-        self.set_should_append(self.second_list_equality_counter)
-
-        if self.should_append:
-            for word in self.second_list:
-                for feature in self.should_append:
-                    if word.features[feature] != self.should_append[feature]:
-                        word.allowed = False
-        else:
-            for word in self.second_list:
-                word.allowed = True
-
-        index = 0
-        for i, word in enumerate(self.second_list):
-            if word.allowed:
-                index = i
-                break
-
-        # повторяем те же действия для второго листа
-        distance_for_second_list = []
-        for i in xrange(self.number_of_same):
-            distance_for_second_list.append(mean([word.same[i] for word in self.first_list_output]))
-        minimum = self.number_of_same + 1
-        for i in xrange(len(self.second_list)):
-            if self.second_list[i].allowed:
-                from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
-                if from_distance < minimum:
-                    minimum = from_distance
-                    index = i
-
-        word = self.second_list[index]
-
-        # добавляем найденное слово в аутпут и удаляем из листа
-        self.second_list_output.append(word)
-
-        # прибавляем параметры добавленного слова в счетчик
-        for feature in self.second_list_equality_counter:
-            # если значение этого параметра есть среди значений в счетчике, то плюс 1
-            if word.features[feature] in self.second_list_equality_counter[feature]:
-                self.second_list_equality_counter[feature][word.features[feature]] += 1
-
         del self.second_list[index]
 
     def sharp(self):
