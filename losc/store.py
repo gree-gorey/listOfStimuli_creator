@@ -83,7 +83,7 @@ class Store:
 
             # считаем сколько времени прошло и убиваем
             time_current = time.time()
-            if time_current - self.time_begin > 20:
+            if time_current - self.time_begin > 30:
                 self.success = False
                 break
 
@@ -201,23 +201,23 @@ class Store:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
-        # first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        # with codecs.open(u'list_1.tsv', u'w', u'utf-8') as w:
-        #     w.write(first_list_head)
-        #     for word in self.first_list_output:
-        #         w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
-        #
-        # second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        # with codecs.open(u'list_2.tsv', u'w', u'utf-8') as w:
-        #     w.write(second_list_head)
-        #     for word in self.second_list_output:
-        #         w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
+        first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        with codecs.open(u'./output/list_1.tsv', u'w', u'utf-8') as w:
+            w.write(first_list_head)
+            for word in self.first_list_output:
+                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
-        stat_table = self.create_final_table()
+        second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        with codecs.open(u'./output/list_2.tsv', u'w', u'utf-8') as w:
+            w.write(second_list_head)
+            for word in self.second_list_output:
+                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
-        # with codecs.open(u'statistics.tsv', u'w', u'utf-8') as w:
-        #     w.write(stat_table)
-        #
+        table = self.create_final_table()
+
+        with codecs.open(u'./output/statistics.tsv', u'w', u'utf-8') as w:
+            w.write(table)
+
         # z = zipfile.ZipFile(u'results.zip', u'w')
         # z.write(u'list_1.tsv')
         # z.write(u'list_2.tsv')
@@ -287,19 +287,100 @@ class Store:
         list1_ratio = '\tratio\t' + '\t'.join(['None'] * self.len_of_numeric) + ratio_string + '\r\n'
         table_per_list += list1_ratio
 
+        shapiro = [str(stats.shapiro(list_features[feature])[1]) for feature in self.numeric_features]
+
+        list1_shapiro = '\tShapiro, p-value\t' + '\t'.join(shapiro) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        table_per_list += list1_shapiro
+
         return table_per_list
+
+    def return_test_results(self, arr1, arr2):
+        test_name = ''
+        p_value = 0
+        t_value = 0
+        levene = stats.levene(arr1, arr2)[1]
+        if self.statistics == 'auto':
+            # проверяем Левеном на равенство дисперсий. Если равны
+            if levene > 0.05:
+                # Шапир на нормальность выборок. Если нормальные
+                if stats.shapiro(arr1)[1] > 0.05 and stats.shapiro(arr2)[1] > 0.05:
+                    # p = Student
+                    test_name = 'Student'
+                    result = stats.ttest_ind(arr1, arr2)
+                    t_value = result[0]
+                    p_value = result[1]
+                else:
+                    # p = Mann
+                    test_name = 'Mann'
+                    if equal(arr1, arr2):
+                        t_value = None
+                        p_value = 1
+                    else:
+                        result = stats.mannwhitneyu(arr1, arr2)
+                        t_value = result[0]
+                        p_value = result[1]
+            else:
+                test_name = 'Welch'
+                result = stats.ttest_ind(arr1, arr2, False)
+                t_value = result[0]
+                p_value = result[1]
+
+        elif self.statistics == 'student':
+            test_name = 'Student'
+            result = stats.ttest_ind(arr1, arr2)
+            t_value = result[0]
+            p_value = result[1]
+        elif self.statistics == 'welch':
+            test_name = 'Welch'
+            result = stats.ttest_ind(arr1, arr2, False)
+            t_value = result[0]
+            p_value = result[1]
+        elif self.statistics == 'mann':
+            test_name = 'Mann'
+            if equal(arr1, arr2):
+                t_value = None
+                p_value = 1
+            else:
+                result = stats.mannwhitneyu(arr1, arr2)
+                t_value = result[0]
+                p_value = result[1]
+
+        df = len(arr1) + len(arr2) - 2
+
+        return [test_name, t_value, p_value, df, levene]
 
     def create_stat_table(self):
         stat_table = ''
 
-        test_name = 'statistics\ttest name\tMann\tStudent\r\n'
+        first_list_features = dict()
+        for feature in self.numeric_features:
+            first_list_features[feature] = [word.features[feature] for word in self.first_list_output]
+
+        second_list_features = dict()
+        for feature in self.numeric_features:
+            second_list_features[feature] = [word.features[feature] for word in self.second_list_output]
+
+        list_of_test_results = [self.return_test_results(first_list_features[feature], second_list_features[feature]) for feature in self.numeric_features]
+
+        test_name = 'statistics\ttest name\t' + '\t'.join([result_list[0] for result_list in list_of_test_results])\
+                    + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
         stat_table += test_name
 
-        # for numeric_feature in self.numeric_features:
-        #     p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
-        #                         [word.features[numeric_feature] for word in self.second_list_output])
-        #
-        #     self.p_values.append(p_value)
+        t_value = '\tt-value\t' + '\t'.join([str(result_list[1]) for result_list in list_of_test_results])\
+                  + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        stat_table += t_value
+
+        p_value = '\tp-value\t' + '\t'.join([str(result_list[2]) for result_list in list_of_test_results]) \
+                  + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        stat_table += p_value
+
+        df = '\tDF\t' + '\t'.join([str(result_list[3]) for result_list in list_of_test_results]) \
+             + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        stat_table += df
+
+        levene = '\tLevene, p-value\t' + '\t'.join([str(result_list[4]) for result_list in list_of_test_results]) \
+                 + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        stat_table += levene
 
         return stat_table
 
@@ -433,10 +514,10 @@ class Store:
 
         del self.first_list[index]
 
-        print '\nAdd closest'
-        print 'Should append: ', self.should_append_first
-        print 'Arguments feature of added word: {}'.format(word.features['arguments'])
-        print 'Counter: ', self.first_list_equality_counter
+        # print '\nAdd closest'
+        # print 'Should append: ', self.should_append_first
+        # print 'Arguments feature of added word: {}'.format(word.features['arguments'])
+        # print 'Counter: ', self.first_list_equality_counter
 
         ##########
         # LIST 2 #
@@ -524,10 +605,10 @@ class Store:
         self.add_features_into_counter(word, 'first')
         del self.first_list[first_list_index]
 
-        print '\nCompensate'
-        print 'Should append: ', self.should_append_first
-        print 'Arguments feature of added word: {}'.format(word.features['arguments'])
-        print 'Counter: ', self.first_list_equality_counter
+        # print '\nCompensate'
+        # print 'Should append: ', self.should_append_first
+        # print 'Arguments feature of added word: {}'.format(word.features['arguments'])
+        # print 'Counter: ', self.first_list_equality_counter
 
         word = self.second_list[second_list_index]
         self.second_list_output.append(word)
@@ -555,8 +636,8 @@ class Store:
                     self.remove_features_from_counter(word_first_list_to_pop, 'first')
                     self.remove_features_from_counter(word_second_list_to_pop, 'second')
 
-                    print 'Features were removed. Arguments feature of removed word: {}'.format(word_first_list_to_pop.features['arguments'])
-                    print 'Counter: ', self.first_list_equality_counter
+                    # print 'Features were removed. Arguments feature of removed word: {}'.format(word_first_list_to_pop.features['arguments'])
+                    # print 'Counter: ', self.first_list_equality_counter
 
                     self.first_list.append(word_first_list_to_pop)
                     self.second_list.append(word_second_list_to_pop)
