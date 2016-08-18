@@ -1,0 +1,241 @@
+{
+  "bonferroni": "off", 
+  "differ_feature": "frequency", 
+  "which_is_higher": "first", 
+  "list1": {
+    "pos": "verb", 
+    "features": {
+      "image_agreement": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "name_agreement_abs": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "age": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "frequency": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "familiarity": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "reflexivity": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "name_agreement_percent": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "objective_complexity": {
+        "matters": false, 
+        "value": null, 
+        "categorical": false
+      }, 
+      "part": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "relation": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "arguments": {
+        "matters": false, 
+        "value": "half", 
+        "categorical": true
+      }, 
+      "subjective_complexity": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "phonemes": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "syllables": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "imageability": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "instrumentality": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }
+    }
+  }, 
+  "list2": {
+    "pos": "noun", 
+    "features": {
+      "image_agreement": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "name_agreement_abs": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "age": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "frequency": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "familiarity": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "reflexivity": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "name_agreement_percent": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "part": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "relation": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "arguments": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }, 
+      "subjective_complexity": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "phonemes": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "syllables": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "imageability": {
+        "matters": false, 
+        "value": [
+          "", 
+          ""
+        ], 
+        "categorical": false
+      }, 
+      "instrumentality": {
+        "matters": false, 
+        "value": "question", 
+        "categorical": true
+      }
+    }
+  }, 
+  "same_features": [
+    "name_agreement_percent", 
+    "name_agreement_abs", 
+    "subjective_complexity", 
+    "familiarity", 
+    "age", 
+    "imageability", 
+    "image_agreement", 
+    "syllables", 
+    "phonemes"
+  ]
+}

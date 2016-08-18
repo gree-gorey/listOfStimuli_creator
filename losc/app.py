@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
 
 import time
+import json
 import flask
 import pickle
+import codecs
 import webbrowser
 import threading
 from structures import Parameters, Store
@@ -47,6 +49,9 @@ def set_parameters():
     parameters_from_client = flask.request.json
     # print parameters_from_client['list1']['features']['reflexivity']
 
+    with codecs.open(u'lists_parameters.json', u'w', u'utf-8') as w:
+        json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
+
     # создаем в сторе предварительные листы
     store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
     store.second_list = store.create_list_from_to_choose(parameters_from_client['list2'])
@@ -90,6 +95,9 @@ def create():
 
     parameters_from_client = flask.request.json
 
+    with codecs.open(u'stat_parameters.json', u'w', u'utf-8') as w:
+        json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
+
     # time.sleep(2)
 
     store.parameters.length = int(parameters_from_client['length'])
@@ -110,9 +118,6 @@ def create():
 
     if store.success:
         result['feedback'] = 'success'
-
-        # подсчет окончательной статы
-        store.final_statistics()
 
         # для печати результатов
         store.print_results()

@@ -8,6 +8,8 @@ import codecs
 import zipfile
 from scipy import stats
 import numpy as np
+from parameters import Parameters
+from word import Word
 
 __author__ = 'gree-gorey'
 
@@ -86,14 +88,6 @@ class Store:
                 # как только размер листа больше 5, начинаем проверять
                 if len(self.first_list_output) > 5:
                     self.test_and_fix()
-
-    def print_results(self):
-        print '\n######################################\n'
-
-        for p in self.p_values:
-            print p
-
-        print '\n######################################\n'
 
     def read_verbs(self, f):
         for line in f:
@@ -191,31 +185,31 @@ class Store:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
-        first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(u'list_1.tsv', u'w', u'utf-8') as w:
-            w.write(first_list_head)
-            for word in self.first_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
-
-        second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(u'list_2.tsv', u'w', u'utf-8') as w:
-            w.write(second_list_head)
-            for word in self.second_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
+        # first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        # with codecs.open(u'list_1.tsv', u'w', u'utf-8') as w:
+        #     w.write(first_list_head)
+        #     for word in self.first_list_output:
+        #         w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
+        #
+        # second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
+        # with codecs.open(u'list_2.tsv', u'w', u'utf-8') as w:
+        #     w.write(second_list_head)
+        #     for word in self.second_list_output:
+        #         w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
         stat_table = self.create_final_table()
 
-        with codecs.open(u'statistics.tsv', u'w', u'utf-8') as w:
-            w.write(stat_table)
-
-        z = zipfile.ZipFile(u'results.zip', u'w')
-        z.write(u'list_1.tsv')
-        z.write(u'list_2.tsv')
-        z.write(u'statistics.tsv')
-
-        os.remove(u'list_1.tsv')
-        os.remove(u'list_2.tsv')
-        os.remove(u'statistics.tsv')
+        # with codecs.open(u'statistics.tsv', u'w', u'utf-8') as w:
+        #     w.write(stat_table)
+        #
+        # z = zipfile.ZipFile(u'results.zip', u'w')
+        # z.write(u'list_1.tsv')
+        # z.write(u'list_2.tsv')
+        # z.write(u'statistics.tsv')
+        #
+        # os.remove(u'list_1.tsv')
+        # os.remove(u'list_2.tsv')
+        # os.remove(u'statistics.tsv')
 
     def create_table_per_list(self, list_output, list_name):
         table_per_list = ''
@@ -272,6 +266,8 @@ class Store:
                     string = key + ': ' + str(ratio[key]) + '; '
                     ratio_string += string
 
+        print ratio_string
+
         list1_ratio = '\tratio\t' + '\t'.join(['None'] * self.len_of_numeric) + ratio_string + '\r\n'
         table_per_list += list1_ratio
 
@@ -282,6 +278,12 @@ class Store:
 
         test_name = 'statistics\ttest name\tMann\tStudent\r\n'
         stat_table += test_name
+
+        # for numeric_feature in self.numeric_features:
+        #     p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
+        #                         [word.features[numeric_feature] for word in self.second_list_output])
+        #
+        #     self.p_values.append(p_value)
 
         return stat_table
 
@@ -298,13 +300,6 @@ class Store:
         table += self.create_stat_table()
 
         return table
-
-    def final_statistics(self):
-        for numeric_feature in self.numeric_features:
-            p_value = self.test([word.features[numeric_feature] for word in self.first_list_output],
-                                [word.features[numeric_feature] for word in self.second_list_output])
-
-            self.p_values.append(p_value)
 
     def compensate(self, first_list_mean, second_list_mean, i):
         # print 777
@@ -408,7 +403,7 @@ class Store:
 
                 # если листы достигли нужной пользователю длины
                 if self.equal():
-                    print 888
+                    # print 888
 
                     # возвращаем по одному слову из аутпута в общий лист
                     first_list_to_pop = self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1))
@@ -708,55 +703,6 @@ class Store:
             else:
                 p_value = stats.mannwhitneyu(arr1, arr2)[1]
         return p_value
-
-
-class Word:
-    def __init__(self):
-        self.name = u''
-        self.features = {
-            'part': None,
-            'arguments': None,
-            'reflexivity': None,
-            'instrumentality': None,
-            'relation': None
-        }
-        self.normalized_features = dict()
-        # это массив из значений фич, которые не должны отличаться
-        self.same = []
-        self.value_of_differ_feature = 0
-        self.distance = 1
-        self.vector = []
-        self.log_freq = None
-        self.allowed = True
-
-    def __gt__(self, other):
-        return self.value_of_differ_feature > other.value_of_differ_feature
-
-    def __lt__(self, other):
-        return self.value_of_differ_feature < other.value_of_differ_feature
-
-    def __eq__(self, other):
-        return self.value_of_differ_feature == other.value_of_differ_feature
-
-
-class Parameters:
-    def __init__(self):
-        self.same = []
-        self.differ = ''
-        self.length = 800
-        self.statistics = None
-        self.frequency = None
-        self.alpha = 0.05
-        self.number_of_comparisons = 0
-        self.bonferroni = 'off'
-
-    def calculate_alpha(self):
-        if self.differ != 'question':
-            self.number_of_comparisons = len(self.same) + 1
-        else:
-            self.number_of_comparisons = len(self.same)
-
-        self.alpha /= self.number_of_comparisons
 
 
 def equal(arr1, arr2):
