@@ -35,8 +35,9 @@ function createLists() {
                 let feedback = data.result["feedback"];
 
                 if (feedback == "success") {
+                    window.open('/static/output/results.zip', '_blank');
                     let message = document.getElementById('message');
-                    message.innerHTML = "Листы успешно сгенерированы.<br>Архив <b>results.zip</b> находится в папке с программой.";
+                    message.innerHTML = "Листы успешно сгенерированы.";
                     showSuccessMessage();
                 } else {
                     let message = document.getElementById('message');
