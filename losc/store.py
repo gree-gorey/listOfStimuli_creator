@@ -202,31 +202,33 @@ class Store:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
+	path = os.path.dirname(os.path.realpath(__file__))
+	
         first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(u'./static/output/list_1.tsv', u'w', u'utf-8') as w:
+        with codecs.open(path + '/static/output/list_1.tsv', u'w', u'utf-8') as w:
             w.write(first_list_head)
             for word in self.first_list_output:
                 w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
         second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(u'./static/output/list_2.tsv', u'w', u'utf-8') as w:
+        with codecs.open(path + '/static/output/list_2.tsv', u'w', u'utf-8') as w:
             w.write(second_list_head)
             for word in self.second_list_output:
                 w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
         table = self.create_final_table()
 
-        with codecs.open(u'./static/output/statistics.tsv', u'w', u'utf-8') as w:
+        with codecs.open(path + '/static/output/statistics.tsv', u'w', u'utf-8') as w:
             w.write(table)
 
-        z = zipfile.ZipFile(u'./static/output/results.zip', u'w')
-        z.write(u'./static/output/list_1.tsv', basename(u'./static/output/list_1.tsv'))
-        z.write(u'./static/output/list_2.tsv', basename(u'./static/output/list_2.tsv'))
-        z.write(u'./static/output/statistics.tsv', basename(u'./static/output/statistics.tsv'))
+        z = zipfile.ZipFile(path + '/static/output/results.zip', u'w')
+        z.write(path + '/static/output/list_1.tsv', basename(path + '/static/output/list_1.tsv'))
+        z.write(path + '/static/output/list_2.tsv', basename(path + '/static/output/list_2.tsv'))
+        z.write(path + '/static/output/statistics.tsv', basename(path + '/static/output/statistics.tsv'))
 
-        os.remove(u'./static/output/list_1.tsv')
-        os.remove(u'./static/output/list_2.tsv')
-        os.remove(u'./static/output/statistics.tsv')
+        os.remove(path + '/static/output/list_1.tsv')
+        os.remove(path + '/static/output/list_2.tsv')
+        os.remove(path + '/static/output/statistics.tsv')
 
     def create_table_per_list(self, list_output, list_name):
         table_per_list = ''

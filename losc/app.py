@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import os
 import time
 # import json
 import flask
@@ -13,8 +14,11 @@ from parameters import Parameters
 __author__ = 'gree-gorey'
 
 
+path = os.path.dirname(os.path.realpath(__file__))
+
+
 def get_version():
-    with open("version.py", "rt") as f:
+    with open(path + "/version.py", "rt") as f:
         return f.readline().split("=")[1].strip(' "\n')
 
 
@@ -52,7 +56,7 @@ def set_parameters():
     global store
 
     # загружаем базу данных в переменную
-    with open(u'data/store.p', u'r') as f:
+    with open(path + '/data/store.p', u'r') as f:
         store = pickle.load(f)
 
     store.parameters = Parameters()
