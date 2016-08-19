@@ -12,6 +12,15 @@ from parameters import Parameters
 
 __author__ = 'gree-gorey'
 
+
+def get_version():
+    with open("version.py", "rt") as f:
+        return f.readline().split("=")[1].strip(' "\n')
+
+
+version = get_version()
+
+
 # Initialize the Flask application
 app = flask.Flask(__name__)
 
@@ -21,17 +30,18 @@ store = Store()
 
 @app.route('/')
 def index():
-    return flask.render_template('index.html')
+    return flask.render_template('index.html', version=version)
 
 
 @app.route('/parameters')
 def parameters():
-    return flask.render_template('parameters.html')
+    return flask.render_template('parameters.html', version=version)
 
 
 @app.route('/statistics')
 def statistics():
     return flask.render_template('statistics.html',
+                                 version=version,
                                  first_list_len=len(store.first_list),
                                  second_list_len=len(store.second_list),
                                  max=min(len(store.first_list), len(store.second_list)))
@@ -134,6 +144,6 @@ if __name__ == '__main__':
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        debug=True
+        # debug=True
     )
 
