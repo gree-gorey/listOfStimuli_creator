@@ -4,6 +4,6 @@ python:
 
 install:
   - sudo apt-get install python-numpy python-scipy
-  - pip install -U flask
+  - pip install -U flask numpy scipy
 
 script: nosetests
