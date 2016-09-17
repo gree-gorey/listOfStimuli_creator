@@ -17,53 +17,75 @@ __author__ = 'gree-gorey'
 
 class Store:
     def __init__(self):
+        self.words = list()
         self.min = dict()
         self.max = dict()
-        self.first_list = []
-        self.second_list = []
-        self.nouns = []
-        self.verbs = []
-        self.first_list_output = []
-        self.second_list_output = []
+        self.first_list = list()
+        self.second_list = list()
+        self.first_list_output = list()
+        self.second_list_output = list()
         self.minimum = None
         self.length = 0
         self.frequency = 'off'
         self.number_of_same = 0
         self.allow = True
-        self.same = []
+        self.same = list()
         self.statistics = None
         self.key_for_differ_feature = ''
         self.which_higher = None
-        self.p_values = []
+        self.p_values = list()
         self.time_begin = None
         self.success = True
         self.first_list_equality_counter = dict()
         self.second_list_equality_counter = dict()
         self.should_append_first = dict()
         self.should_append_second = dict()
-        self.numeric_features = [
-            "name_agreement_percent",
-            "name_agreement_abs",
-            "subjective_complexity",
-            # "objective_complexity",
-            "familiarity",
-            "age",
-            "imageability",
-            "image_agreement",
-            "frequency",
-            "syllables",
-            "phonemes"
-        ]
-        self.categorical_features = {
-            "arguments": ("one", "two"),
-            "reflexivity": ("on", "off"),
-            "instrumentality": ("on", "off"),
-            "relation": ("on", "off"),
-            "part": ("first", "second")
-        }
+        self.numeric_features = list()
+        self.categorical_features = dict()
+        self.categorical_features_list = list()
+        self.len_of_numeric = 0
+        self.len_of_categorical = 0
+        self.parameters = Parameters()
+
+    def read_data(self):
+        with codecs.open('./data/map.tsv', 'r', 'utf-8') as f:
+            lines = f.readlines()
+
+        features_list = lines[0].rstrip().split('\t')[1::]
+
+        types = lines[1].rstrip().split('\t')[1::]
+
+        features_dict = dict(zip(features_list, types))
+
+        for feature in features_list:
+            if features_dict[feature] == 'categorical':
+                self.categorical_features[feature] = list()
+                self.categorical_features_list.append(feature)
+            else:
+                self.numeric_features.append(feature)
+
         self.len_of_numeric = len(self.numeric_features)
         self.len_of_categorical = len(self.categorical_features)
-        self.parameters = Parameters()
+
+        for line in lines[2::]:
+            self.words.append(Word())
+
+            columns = line.rstrip().split('\t')
+            self.words[-1].name = columns[0]
+
+            for feature, value in zip(features_list, columns[1::]):
+                if features_dict[feature] == 'int':
+                    self.words[-1].features[feature] = int(value)
+                elif features_dict[feature] == 'float':
+                    self.words[-1].features[feature] = float(value)
+                else:
+                    self.words[-1].features[feature] = value
+                    if value != 'None':
+                        if value not in self.categorical_features[feature]:
+                            self.categorical_features[feature].append(value)
+
+        for feature in self.categorical_features:
+            self.categorical_features[feature] = sorted(self.categorical_features[feature])
 
     def reset_counters(self):
         for feature, parameters in self.first_list_equality_counter.iteritems():
@@ -106,55 +128,6 @@ class Store:
                 if len(self.first_list_output) > 5:
                     self.test_and_fix()
 
-    def read_verbs(self, f):
-        for line in f:
-            line = line.rstrip(u'\n').replace(',', '.').split(u'\t')
-            self.verbs.append(Word())
-
-            self.verbs[-1].name = line[0] + '. ' + line[1] + ' (' + line[2] + ')'
-
-            self.verbs[-1].features['name_agreement_percent'] = float(line[3])
-            self.verbs[-1].features['name_agreement_abs'] = float(line[4])
-            self.verbs[-1].features['subjective_complexity'] = float(line[5])
-            # self.verbs[-1].features['objective_complexity'] = None if '-' in line[6] else float(line[6])
-            self.verbs[-1].features['familiarity'] = float(line[7])
-            self.verbs[-1].features['age'] = float(line[8])
-            self.verbs[-1].features['imageability'] = float(line[9])
-            self.verbs[-1].features['image_agreement'] = float(line[10])
-            self.verbs[-1].features['frequency'] = float(line[11])
-            self.verbs[-1].features['syllables'] = float(line[12])
-            self.verbs[-1].features['phonemes'] = float(line[13])
-            self.verbs[-1].features['arguments'] = 'one' if '1' in line[14] else 'two'
-            self.verbs[-1].features['reflexivity'] = 'on' if '+' in line[15] else 'off'
-            self.verbs[-1].features['instrumentality'] = 'on' if '+' in line[16] else 'off'
-            self.verbs[-1].features['relation'] = 'on' if '+' in line[16] else 'off'
-
-            # логарифмируем частоту
-            self.verbs[-1].log_freq = math.log(self.verbs[-1].features['frequency'] + 1, 10)
-
-    def read_nouns(self, f):
-        for line in f:
-            line = line.rstrip(u'\n').replace(',', '.').split(u'\t')
-            self.nouns.append(Word())
-
-            self.nouns[-1].name = line[1]
-
-            self.nouns[-1].features['part'] = 'first' if '1' in line[0] else 'second'
-            self.nouns[-1].features['name_agreement_percent'] = float(line[2])
-            self.nouns[-1].features['name_agreement_abs'] = float(line[3])
-            self.nouns[-1].features['subjective_complexity'] = float(line[4])
-            # self.nouns[-1].features['objective_complexity'] = None if '-' in line[5] else float(line[5])
-            self.nouns[-1].features['familiarity'] = float(line[6])
-            self.nouns[-1].features['age'] = float(line[7])
-            self.nouns[-1].features['imageability'] = float(line[8])
-            self.nouns[-1].features['image_agreement'] = float(line[9])
-            self.nouns[-1].features['frequency'] = float(line[10])
-            self.nouns[-1].features['syllables'] = float(line[11])
-            self.nouns[-1].features['phonemes'] = float(line[12])
-
-            # логарифмируем частоту
-            self.nouns[-1].log_freq = math.log(self.nouns[-1].features['frequency'] + 1, 10)
-
     def create_equality_counter(self, list_parameters_from_client):
         # создаем пустой счетчик
         equality_counter = dict()
@@ -162,7 +135,7 @@ class Store:
         # обходим список категориальных
         for feature in self.categorical_features:
             # если у кого-то значение 50/50
-            if list_parameters_from_client['features'][feature]['value'] == 'half':
+            if list_parameters_from_client[feature]['value'] == 'half':
                 # создаем для данного параметра ячейку с двумя значениями, равными нулю
                 equality_counter[feature] = {
                     self.categorical_features[feature][0]: 0,
@@ -202,8 +175,8 @@ class Store:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
-	path = os.path.dirname(os.path.realpath(__file__))
-	
+        path = os.path.dirname(os.path.realpath(__file__))
+
         first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
         with codecs.open(path + '/static/output/list_1.tsv', u'w', u'utf-8') as w:
             w.write(first_list_head)
@@ -687,22 +660,9 @@ class Store:
 
     def create_list_from_to_choose(self, parameters_for_one_list):
         filtered_list = []
-        if parameters_for_one_list['pos'] == 'verb':
-            parameters_for_one_list['features']['part']['matters'] = False
-
-            for verb in self.verbs:
-                if is_match(verb, parameters_for_one_list):
-                    filtered_list.append(verb)
-
-        elif parameters_for_one_list['pos'] == 'noun':
-            parameters_for_one_list['features']['arguments']['matters'] = False
-            parameters_for_one_list['features']['reflexivity']['matters'] = False
-            parameters_for_one_list['features']['instrumentality']['matters'] = False
-            parameters_for_one_list['features']['relation']['matters'] = False
-
-            for noun in self.nouns:
-                if is_match(noun, parameters_for_one_list):
-                    filtered_list.append(noun)
+        for word in self.words:
+            if is_match(word, parameters_for_one_list):
+                filtered_list.append(word)
 
         return filtered_list
 
@@ -831,14 +791,14 @@ def mean(arr):
 
 
 def is_match(database_word, client_word_parameters):
-    for feature in client_word_parameters['features']:
+    for feature in client_word_parameters:
 
         # Берем только те, которые нам важны
-        if client_word_parameters['features'][feature]['matters']:
+        if client_word_parameters[feature]['matters']:
 
             # если это категориальная фича, просто сравниваем значение
-            if client_word_parameters['features'][feature]['categorical']:
-                if client_word_parameters['features'][feature]['value'] != database_word.features[feature]:
+            if client_word_parameters[feature]['categorical']:
+                if client_word_parameters[feature]['value'] != database_word.features[feature]:
                     return False
 
             # если это континуальная фича, то должна попадать в диапазон
@@ -847,11 +807,11 @@ def is_match(database_word, client_word_parameters):
                 # print database_word.features[feature]
                 # print float(client_word_parameters['features'][feature]['value'][0]) <= database_word.features[feature] <= float(client_word_parameters['features'][feature]['value'][1])
 
-                if not client_word_parameters['features'][feature]['value'][0]:
-                    client_word_parameters['features'][feature]['value'][0] = -float('inf')
-                if not client_word_parameters['features'][feature]['value'][1]:
-                    client_word_parameters['features'][feature]['value'][1] = float('inf')
+                if not client_word_parameters[feature]['value'][0]:
+                    client_word_parameters[feature]['value'][0] = -float('inf')
+                if not client_word_parameters[feature]['value'][1]:
+                    client_word_parameters[feature]['value'][1] = float('inf')
 
-                if not float(client_word_parameters['features'][feature]['value'][0]) <= database_word.features[feature] <= float(client_word_parameters['features'][feature]['value'][1]):
+                if not float(client_word_parameters[feature]['value'][0]) <= database_word.features[feature] <= float(client_word_parameters[feature]['value'][1]):
                     return False
     return True

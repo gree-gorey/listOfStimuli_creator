@@ -1,0 +1,22 @@
+name	pos	part	name_agreement_percent	name_agreement_abs	subjective_complexity	familiarity	age	imageability	image_agreement	frequency	syllables	phonemes	arguments	reflexivity	instrumentality	name_relation
+	categorical	categorical	int	float	float	float	float	float	float	float	int	int	categorical	categorical	categorical	categorical
+1. автобус (a bus)	noun	2	100	0	2.65	4.79	1.43	1.07	4.46	64.8	3	7	None	None	None	None
+2. автомат (a sub-machine gun)	noun	2	53	1.72	3.3	2.76	2.21	1.56	3.64	56	3	7	None	None	None	None
+3. автомобиль (a car)	noun	2	60	1.04	2.7	4.72	1.7	1.11	3.04	156.9	4	9	None	None	None	None
+4. акваланг (an aqualung)	noun	1	44	1.97	3.17	2.24	3.38	1.31	3.75	1.9	3	8	None	None	None	None
+5. аквариум (an aquarium)	noun	1	99	0.08	3.36	3.97	2.2	1.16	4	8.3	4	8	None	None	None	None
+6. акула (a shark)	noun	1	100	0	3.25	2.77	2.06	1.06	4.56	9.3	3	5	None	None	None	None
+7. ананас (a pineapple)	noun	1	99	0.08	2.89	4.25	2.51	1.08	4.73	3.6	3	6	None	None	None	None
+8. антенна (an antenna)	noun	1	99	0.08	2.23	3.68	2.32	1.25	3.89	8.5	3	6	None	None	None	None
+9. апельсин (an orange)	noun	1	50	1.86	2.88	4.43	1.38	1.03	3.75	7.6	3	7	None	None	None	None
+10. аптека (a pharmacy)	noun	2	86	0.87	3.41	4.49	1.9	1.18	3.99	15.1	3	6	None	None	None	None
+1. барабанить drum	verb	None	84	0.89	2.16	2.85	1.81	1.1	4.5	2.7	4	9	1	off	on	on
+2. бежать run	verb	None	92	0.59	2.24	4.53	1.24	1.03	4.14	143.6	2	5	1	off	off	off
+3. бинтовать bandage tr	verb	None	47	2.21	2.77	3.09	2.24	1.18	4.66	0.7	3	8	2	off	on	on
+4. бить beat	verb	None	57	1.49	2.66	3.48	1.34	1.12	4.09	107.5	1	4	2	off	off	off
+5. блеять bleat	verb	None	88	0.8	1.75	2.86	2.47	1.84	4.57	1.3	2	6	1	off	off	off
+6. болеть be ill	verb	None	91	0.59	2.12	4.37	1.66	1.23	3.17	68.5	3	7	1	off	off	off
+7. бомбить bomb	verb	None	73	1.34	2.99	2.68	1.42	1.31	4.29	6.4	2	6	2	off	on	on
+8. бороться wrestle	verb	None	82	1.01	2.96	3.31	2.36	1.62	4.26	70.3	3	6	1	on	off	off
+9. бояться be afraid	verb	None	74	1.66	3.1	3.68	1.36	1.78	3	266.5	3	5	2	on	off	off
+10. брить shave tr	verb	None	93	0.45	2.24	3.15	2.29	1.22	3.51	3.4	2	6	2	off	on	on

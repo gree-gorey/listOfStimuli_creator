@@ -51,13 +51,31 @@ def statistics():
                                  max=min(len(store.first_list), len(store.second_list)))
 
 
+@app.route('/_get_features', methods=['GET', 'POST'])
+def get_features():
+    global store
+
+    del store
+    store = Store()
+
+    # считываем табличку с данными
+    store.read_data()
+
+    result = {
+        'categorical_features_list': store.categorical_features_list,
+        'categorical_features': store.categorical_features,
+        'numeric_features': store.numeric_features
+    }
+
+    return flask.jsonify(result=result)
+
+
 @app.route('/_set_parameters', methods=['GET', 'POST'])
 def set_parameters():
     global store
 
-    # загружаем базу данных в переменную
-    with open(path + '/data/store.p', u'r') as f:
-        store = pickle.load(f)
+    # считываем табличку с данными
+    store.read_data()
 
     store.parameters = Parameters()
 
@@ -148,6 +166,6 @@ if __name__ == '__main__':
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        # debug=True
+        debug=True
     )
 

@@ -17,6 +17,11 @@
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <link href="{{ url_for('static', filename='css/font.css') }}" rel="stylesheet">
 
+    <!-- JS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <!--<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>-->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/index.js') }}"></script>
+
     <!-- CSS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/w3.css') }}">
@@ -35,8 +40,13 @@
     <div class="w3-row greeting">
         <h2>list of stimuli creator v{{version}}</h2>
     </div>
+    <select id="number_of_lists">
+        <option value="1">Один лист</option>
+        <option value="2" selected>Два листа</option>
+        <option value="3">Три листа</option>
+    </select>
     <div class="w3-row">
-        <a class="w3-btn" href="/parameters">Создать листы</a>
+        <button class="w3-btn" onClick="goToParameters();">Создать листы</button>
     </div>
     <div class="w3-row meta">
         <b>author: </b><span>gree-gorey</span><br>
