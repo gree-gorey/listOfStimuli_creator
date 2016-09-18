@@ -42,23 +42,19 @@
         <div class="w3-half custom-container stat-container">
             <p>Параметры установлены.</p>
             <p>Для формирования листов с заданными параметрами осталось:<br>
-                Лист №1 — {{first_list_len}} слов.<br>
-                Лист №2 — {{second_list_len}} слов.
+                <div id="lens"></div>
             </p>
             <span>Укажите размер листа:</span><br>
             <input id="length" type="number" class="stat-select" max={{max}}><br>
-            <span>Выберите статистический тест:</span><br>
-            <select id="statistics" class="stat-select">
-                <option value="auto">Выбирать тест автоматически (занимает много времени)</option>
-                <option value="student">Student's t-test</option>
-                <option value="welch">Welch's t-test</option>
-                <option value="mann">Mann-Whitney U test</option>
-            </select>
-            <span>Преобразование частотности слов:</span><br>
-            <select id="frequency" class="stat-select">
-                <option value="on">Использовать логарифмическое преобразование</option>
-                <option value="off">Не требуется</option>
-            </select>
+            <div id="statistic-test">
+                <span>Выберите статистический тест:</span><br>
+                <select id="statistics" class="stat-select">
+                    <option value="auto">Выбирать тест автоматически (занимает много времени)</option>
+                    <option value="student">Student's t-test</option>
+                    <option value="welch">Welch's t-test</option>
+                    <option value="mann">Mann-Whitney U test</option>
+                </select>
+            </div>
             <button class="w3-btn stat-btn" onClick="createLists();">Создать листы</button><br>
             <a class="w3-btn" href="/">< В начало</a><br>
         </div>

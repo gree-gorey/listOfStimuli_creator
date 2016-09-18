@@ -34,6 +34,8 @@ function setParameters() {
 
     parameters["bonferroni"] = document.getElementById("bonferroni").value;
 
+    parameters["n"] = n;
+
 
     if ($.inArray(parameters["differ_feature"], parameters["same_features"]) != -1) {
         let message = document.getElementById('message');
@@ -59,8 +61,15 @@ function setParameters() {
         data: JSON.stringify(parameters),
         contentType: 'application/json',
         dataType: 'json',
-        success: function () {
-            window.location = "/statistics";
+        success: function (result) {
+            if (result['result'] == 'success') {
+                window.location = "/statistics";
+            } else {
+                let message = document.getElementById('message');
+                message.innerHTML = "Фильтр с заданными параметрами возвращает пустой лист. Измените фильтр.";
+                showSuccessMessage();
+                return
+            }
         }
     }).done(function () {
         body.className = "";

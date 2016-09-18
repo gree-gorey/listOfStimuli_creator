@@ -156,6 +156,11 @@ function renderCategoricalSelect(list, feature, featuresHash) {
         select.appendChild(option);
     }
 
+    var halfOption = document.createElement("option");
+    halfOption.setAttribute("value", "half");
+    halfOption.innerHTML = "50 / 50";
+    select.appendChild(halfOption);
+
     return select;
 }
 

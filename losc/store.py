@@ -18,6 +18,7 @@ __author__ = 'gree-gorey'
 class Store:
     def __init__(self):
         self.words = list()
+        self.list_number = 2
         self.min = dict()
         self.max = dict()
         self.first_list = list()
@@ -26,7 +27,6 @@ class Store:
         self.second_list_output = list()
         self.minimum = None
         self.length = 0
-        self.frequency = 'off'
         self.number_of_same = 0
         self.allow = True
         self.same = list()
@@ -48,7 +48,7 @@ class Store:
         self.parameters = Parameters()
 
     def read_data(self):
-        with codecs.open('./data/map.tsv', 'r', 'utf-8') as f:
+        with codecs.open('./data/data.tsv', 'r', 'utf-8') as f:
             lines = f.readlines()
 
         features_list = lines[0].rstrip().split('\t')[1::]
@@ -79,10 +79,12 @@ class Store:
                 elif features_dict[feature] == 'float':
                     self.words[-1].features[feature] = float(value)
                 else:
-                    self.words[-1].features[feature] = value
                     if value != 'None':
+                        self.words[-1].features[feature] = value
                         if value not in self.categorical_features[feature]:
                             self.categorical_features[feature].append(value)
+                    else:
+                        self.words[-1].features[feature] = None
 
         for feature in self.categorical_features:
             self.categorical_features[feature] = sorted(self.categorical_features[feature])
@@ -97,6 +99,14 @@ class Store:
 
         # print '\n#####\nCounters were reset'
         # print self.first_list_equality_counter
+
+    def generate_one(self):
+        while len(self.first_list_output) < self.parameters.length:
+            self.check_words_for_allowance('first')
+            for i, word in enumerate(self.first_list):
+                if word.allowed:
+                    self.first_list_output.append(word)
+                    del self.first_list[i]
 
     def generate(self):
         while self.sharp():
@@ -136,6 +146,8 @@ class Store:
         for feature in self.categorical_features:
             # если у кого-то значение 50/50
             if list_parameters_from_client[feature]['value'] == 'half':
+                # print feature
+
                 # создаем для данного параметра ячейку с двумя значениями, равными нулю
                 equality_counter[feature] = {
                     self.categorical_features[feature][0]: 0,
@@ -234,6 +246,9 @@ class Store:
         ratios = list()
 
         for feature in self.categorical_features:
+            # print '<< {} >>'.format(self.categorical_features[feature][0])
+            # print self.categorical_features[feature]
+
             ratio = {
                 self.categorical_features[feature][0]: 0,
                 self.categorical_features[feature][1]: 0
@@ -258,7 +273,7 @@ class Store:
                     string = key + ': ' + str(ratio[key]) + '; '
                     ratio_string += string
 
-        print ratio_string
+        # print ratio_string
 
         list1_ratio = '\tratio\t' + '\t'.join(['None'] * self.len_of_numeric) + ratio_string + '\r\n'
         table_per_list += list1_ratio
@@ -662,6 +677,7 @@ class Store:
         filtered_list = []
         for word in self.words:
             if is_match(word, parameters_for_one_list):
+                # print word.features["pos"]
                 filtered_list.append(word)
 
         return filtered_list
@@ -684,21 +700,11 @@ class Store:
         self.number_of_same = len(self.same)
         self.length = self.parameters.length
         self.statistics = self.parameters.statistics
-        self.frequency = self.parameters.frequency
         for word in self.first_list:
             # это массив из значений фич, которые не должны отличаться
             word.same = [word.normalized_features[key] for key in self.same]
         for word in self.second_list:
             word.same = [word.normalized_features[key] for key in self.same]
-
-        if self.frequency == 'on':
-            self.change_frequency()
-
-    def change_frequency(self):
-        for word in self.first_list:
-            word.features['frequency'] = word.log_freq
-        for word in self.second_list:
-            word.features['frequency'] = word.log_freq
 
     def add_first(self):
         self.first_list += self.first_list_output

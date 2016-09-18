@@ -4,13 +4,7 @@
 class Word:
     def __init__(self):
         self.name = u''
-        self.features = {
-            'part': None,
-            'arguments': None,
-            'reflexivity': None,
-            'instrumentality': None,
-            'relation': None
-        }
+        self.features = dict()
         self.normalized_features = dict()
         # это массив из значений фич, которые не должны отличаться
         self.same = []

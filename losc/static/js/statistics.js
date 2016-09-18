@@ -2,11 +2,40 @@
 //   return 'ВНИМАНИЕ!\nВсе несохранённые данные будут потеряны!';
 // };
 
+$(function () {
+    $.getJSON('/_get_features_for_statistics_page', {
+
+    }, function(data) {
+        var result = data.result;
+
+        var n = result["n"];
+        var lens = result["lens"];
+
+        for (let i = 0; i < n; i++) {
+            renderLen(i+1, lens[i]);
+        }
+
+        if (n == 1) {
+            $("#statistic-test").hide();
+        }
+    });
+});
+
+function renderLen(listNumber, listLength) {
+    var lens = document.getElementById("lens");
+
+    var len = document.createElement("span");
+    len.innerHTML = "Лист №" + listNumber + " – " + listLength + " слов";
+    lens.appendChild(len);
+
+    var br = document.createElement("br");
+    lens.appendChild(br);
+}
+
 function createLists() {
     var statisticsParameters = {};
     statisticsParameters["length"] = document.getElementById("length").value;
     statisticsParameters["statistics"] = document.getElementById("statistics").value;
-    statisticsParameters["frequency"] = document.getElementById("frequency").value;
 
     var givenLength = parseInt(statisticsParameters["length"]);
     // console.log(givenLength);

@@ -15,9 +15,8 @@ store = Store()
 def set_parameters():
     global store
 
-    # загружаем базу данных в переменную
-    with open(u'data/store.p', u'r') as f:
-        store = pickle.load(f)
+    # считываем табличку с данными
+    store.read_data()
 
     store.parameters = Parameters()
 
@@ -28,13 +27,15 @@ def set_parameters():
     store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
     store.second_list = store.create_list_from_to_choose(parameters_from_client['list2'])
 
+    # print len(store.first_list), len(store.second_list)
+
     # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
     store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
     store.second_list_equality_counter = store.create_equality_counter(parameters_from_client['list2'])
 
     # нормализуем все к шкале от 0 до 1
     store.normalize()
-    # print store.first_list[0].normalized_features
+    # print store.first_list[0].features.keys()
 
     # проверяем, должны ли различаться и если да, то различаем
     if parameters_from_client['differ_feature'] != 'question':
@@ -56,6 +57,8 @@ def set_parameters():
     # если листы оказались одинаковыми, нужно рандомно разделить их
     store.split()
 
+    print len(store.first_list), len(store.second_list)
+
 
 def create():
 
@@ -64,8 +67,6 @@ def create():
 
     store.parameters.length = int(parameters_from_client['length'])
     store.parameters.statistics = parameters_from_client['statistics']
-    store.parameters.frequency = parameters_from_client['frequency']
-    # print parameters.length
 
     # устанавливаем параметры
     store.setup_parameters()
@@ -76,7 +77,7 @@ def create():
     # собственно генерация листов
     store.generate()
 
-    print store.first_list_equality_counter
+    # print store.first_list_equality_counter
 
     if store.success:
         # создаем файлы и пакуем в архив

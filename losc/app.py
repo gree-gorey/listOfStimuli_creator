@@ -4,8 +4,9 @@ import os
 import time
 # import json
 import flask
-import pickle
+# import pickle
 # import codecs
+from random import shuffle
 import webbrowser
 import threading
 from store import Store
@@ -46,8 +47,6 @@ def parameters():
 def statistics():
     return flask.render_template('statistics.html',
                                  version=version,
-                                 first_list_len=len(store.first_list),
-                                 second_list_len=len(store.second_list),
                                  max=min(len(store.first_list), len(store.second_list)))
 
 
@@ -55,8 +54,7 @@ def statistics():
 def get_features():
     global store
 
-    del store
-    store = Store()
+    store.__init__()
 
     # считываем табличку с данными
     store.read_data()
@@ -70,13 +68,21 @@ def get_features():
     return flask.jsonify(result=result)
 
 
+@app.route('/_get_features_for_statistics_page', methods=['GET', 'POST'])
+def get_features_for_statistics_page():
+    result = {
+        'lens': [
+            len(store.first_list),
+            len(store.second_list)
+        ],
+        'n': store.list_number
+    }
+
+    return flask.jsonify(result=result)
+
+
 @app.route('/_set_parameters', methods=['GET', 'POST'])
 def set_parameters():
-    global store
-
-    # считываем табличку с данными
-    store.read_data()
-
     store.parameters = Parameters()
 
     parameters_from_client = flask.request.json
@@ -85,41 +91,63 @@ def set_parameters():
     # with codecs.open(u'lists_parameters.json', u'w', u'utf-8') as w:
     #     json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
 
-    # создаем в сторе предварительные листы
-    store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
-    store.second_list = store.create_list_from_to_choose(parameters_from_client['list2'])
+    if int(parameters_from_client['n']) == 1:
+        store.list_number = 1
+        store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
 
-    # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
-    store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
-    store.second_list_equality_counter = store.create_equality_counter(parameters_from_client['list2'])
+        # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
+        store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
 
-    # нормализуем все к шкале от 0 до 1
-    store.normalize()
-    # print store.first_list[0].normalized_features
+        # перемешиваем лист
+        shuffle(store.first_list)
 
-    # проверяем, должны ли различаться и если да, то различаем
-    if parameters_from_client['differ_feature'] != 'question':
-        store.key_for_differ_feature = parameters_from_client['differ_feature']
-        store.which_higher = parameters_from_client['which_is_higher']
-        store.differentiate()
-    # print len(store.first_list)
-    # print store.second_list[0].name
+        if len(store.first_list) == 0:
+            result = 'failure'
+            return flask.jsonify(result=result)
+        else:
+            result = 'success'
+            return flask.jsonify(result=result)
 
-    # устанавливаем отличающийся параметр
-    store.parameters.differ = parameters_from_client['differ_feature']
+    else:
+        # создаем в сторе предварительные листы
+        store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
+        store.second_list = store.create_list_from_to_choose(parameters_from_client['list2'])
 
-    # устанавливаем bonferroni
-    store.parameters.bonferroni = parameters_from_client['bonferroni']
+        if len(store.first_list) == 0 or len(store.second_list) == 0:
+            result = 'failure'
+            return flask.jsonify(result=result)
 
-    # создаем вектор одинаковых
-    store.parameters.same = parameters_from_client['same_features']
+        # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
+        store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
+        store.second_list_equality_counter = store.create_equality_counter(parameters_from_client['list2'])
 
-    # если листы оказались одинаковыми, нужно рандомно разделить их
-    store.split()
+        # нормализуем все к шкале от 0 до 1
+        store.normalize()
+        # print store.first_list[0].normalized_features
 
-    result = {}
+        # проверяем, должны ли различаться и если да, то различаем
+        if parameters_from_client['differ_feature'] != 'question':
+            store.key_for_differ_feature = parameters_from_client['differ_feature']
+            store.which_higher = parameters_from_client['which_is_higher']
+            store.differentiate()
+        # print len(store.first_list)
+        # print store.second_list[0].name
 
-    return flask.jsonify(result=result)
+        # устанавливаем отличающийся параметр
+        store.parameters.differ = parameters_from_client['differ_feature']
+
+        # устанавливаем bonferroni
+        store.parameters.bonferroni = parameters_from_client['bonferroni']
+
+        # создаем вектор одинаковых
+        store.parameters.same = parameters_from_client['same_features']
+
+        # если листы оказались одинаковыми, нужно рандомно разделить их
+        store.split()
+
+        result = 'success'
+
+        return flask.jsonify(result=result)
 
 
 @app.route('/_create', methods=['GET', 'POST'])
@@ -133,29 +161,43 @@ def create():
 
     # time.sleep(2)
 
-    store.parameters.length = int(parameters_from_client['length'])
-    store.parameters.statistics = parameters_from_client['statistics']
-    store.parameters.frequency = parameters_from_client['frequency']
-    # print parameters.length
+    if store.list_number == 1:
+        store.parameters.length = int(parameters_from_client['length'])
 
-    # устанавливаем параметры
-    store.setup_parameters()
+        # собственно генерация листа
+        store.generate_one()
 
-    # добавим отсчет времени
-    store.time_begin = time.time()
+        if store.success:
+            result['feedback'] = 'success'
 
-    # собственно генерация листов
-    store.generate()
+            # создаем файлы и пакуем в архив
+            store.create_zip()
 
-    # print store.first_list_equality_counter
+        return flask.jsonify(result=result)
 
-    if store.success:
-        result['feedback'] = 'success'
+    else:
 
-        # создаем файлы и пакуем в архив
-        store.create_zip()
+        store.parameters.length = int(parameters_from_client['length'])
+        store.parameters.statistics = parameters_from_client['statistics']
 
-    return flask.jsonify(result=result)
+        # устанавливаем параметры
+        store.setup_parameters()
+
+        # добавим отсчет времени
+        store.time_begin = time.time()
+
+        # собственно генерация листов
+        store.generate()
+
+        # print store.first_list_equality_counter
+
+        if store.success:
+            result['feedback'] = 'success'
+
+            # создаем файлы и пакуем в архив
+            store.create_zip()
+
+        return flask.jsonify(result=result)
 
 
 if __name__ == '__main__':

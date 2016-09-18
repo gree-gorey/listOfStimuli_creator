@@ -1,36 +1,22 @@
 # -*- coding:utf-8 -*-
 
-# a = [-1, 1, 2, 4]
-#
-# b = [0, 1, -8, 8]
+import codecs
 
-# from operator import itemgetter
-# # print min(enumerate(b), key=itemgetter(1))[0]
-#
-# # b[2] += 1
-# #
-# # print b
-#
-#
-# b = [0, 0, 0]
-#
-# while True:
-#     print b
-#     min_index = min(enumerate(b), key=itemgetter(1))[0]
-#     b[min_index] += 1
-#     v = raw_input()
+with codecs.open('./data/verbs.tsv', 'r', 'utf-8') as f:
+    lines = f.readlines()
 
-# import webbrowser
-# new = 2  # open in a new tab, if possible
-#
-# # open a public URL, in this case, the webbrowser docs
-# url = "http://127.0.0.1:5000"
-# webbrowser.open(url, new=new)
+with codecs.open('./data/verbs_new.tsv', 'w', 'utf-8') as w:
 
-import numpy as np
+    for line in lines:
+        new_line = list()
 
-a = [0, 1, 2]
+        columns = line.rstrip().split('\t', 18)
+        name = u'{}. {} ({})'.format(columns[0], columns[1], columns[2])
+        new_line.append(name)
 
-print np.std(a)
+        new_line += columns[3::]
+
+        w.write(u'\t'.join(new_line) + u'\n')
+
 
 

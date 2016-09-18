@@ -7,7 +7,6 @@ class Parameters:
         self.differ = ''
         self.length = 800
         self.statistics = None
-        self.frequency = None
         self.alpha = 0.05
         self.number_of_comparisons = 0
         self.bonferroni = 'off'
