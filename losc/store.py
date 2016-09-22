@@ -47,8 +47,8 @@ class Store:
         self.len_of_categorical = 0
         self.parameters = Parameters()
 
-    def read_data(self):
-        with codecs.open('./data/data.tsv', 'r', 'utf-8') as f:
+    def read_data(self, path):
+        with codecs.open(path + '/data/data.tsv', 'r', 'utf-8') as f:
             lines = f.readlines()
 
         features_list = lines[0].rstrip().split('\t')[1::]

@@ -57,7 +57,7 @@ def get_features():
     store.__init__()
 
     # считываем табличку с данными
-    store.read_data()
+    store.read_data(path)
 
     result = {
         'categorical_features_list': store.categorical_features_list,
