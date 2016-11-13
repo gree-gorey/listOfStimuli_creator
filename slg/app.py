@@ -47,7 +47,7 @@ def parameters():
 def statistics():
     return flask.render_template('statistics.html',
                                  version=version,
-                                 max=min(len(store.first_list), len(store.second_list)))
+                                 max=store.get_max_list_length())
 
 
 @app.route('/_get_features', methods=['GET', 'POST'])

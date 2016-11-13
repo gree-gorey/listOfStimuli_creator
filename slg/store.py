@@ -21,10 +21,8 @@ class Store:
         self.list_number = 2
         self.min = dict()
         self.max = dict()
-        self.first_list = list()
-        self.second_list = list()
-        self.first_list_output = list()
-        self.second_list_output = list()
+        self.lists = dict()  # словарь, ключ -- номер листа, значение -- словарь с начальными данными
+        self.list_outputs = dict()  # словарь, ключ -- номер листа, значение -- словарь с полученными данными
         self.minimum = None
         self.length = 0
         self.number_of_same = 0
@@ -36,16 +34,17 @@ class Store:
         self.p_values = list()
         self.time_begin = None
         self.success = True
-        self.first_list_equality_counter = dict()
-        self.second_list_equality_counter = dict()
-        self.should_append_first = dict()
-        self.should_append_second = dict()
+        self.list_equality_counter = dict()
+        self.should_append = dict()
         self.numeric_features = list()
         self.categorical_features = dict()
         self.categorical_features_list = list()
         self.len_of_numeric = 0
         self.len_of_categorical = 0
         self.parameters = Parameters()
+
+    def get_max_list_length(self):
+        return min(len(self.first_list), len(self.second_list)) if self.list_number == 2 else len(self.first_list)
 
     def read_data(self, path):
         with codecs.open(path + '/data/data.tsv', 'r', 'utf-8') as f:
@@ -195,6 +194,7 @@ class Store:
             for word in self.first_list_output:
                 w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
+        if self.list_number == 2:
         second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
         with codecs.open(path + '/static/output/list_2.tsv', u'w', u'utf-8') as w:
             w.write(second_list_head)
@@ -227,6 +227,10 @@ class Store:
 
         list1_mean = list_name + '\tmean\t' + '\t'.join(means) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_mean
+
+        # print self.numeric_features
+        # print list_features[u'PercNA']
+        # print list_features[u'H']
 
         mins = [str(np.min(list_features[feature])) for feature in self.numeric_features]
 
@@ -382,8 +386,9 @@ class Store:
 
         table += self.create_table_per_list(self.first_list_output, 'list 1')
         table += '\r\n'
-        table += self.create_table_per_list(self.second_list_output, 'list 2')
-        table += '\r\n'
+        if self.list_number == 2:
+            table += self.create_table_per_list(self.second_list_output, 'list 2')
+            table += '\r\n'
 
         table += self.create_stat_table()
 

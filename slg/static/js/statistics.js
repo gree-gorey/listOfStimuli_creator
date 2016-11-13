@@ -38,8 +38,10 @@ function createLists() {
     statisticsParameters["statistics"] = document.getElementById("statistics").value;
 
     var givenLength = parseInt(statisticsParameters["length"]);
-    // console.log(givenLength);
+    console.log(givenLength);
+
     var maxLength = parseInt(document.getElementById("length").getAttribute("max"));
+    console.log(maxLength);
 
     if (givenLength > maxLength) {
         let message = document.getElementById('message');
