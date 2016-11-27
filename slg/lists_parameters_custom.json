@@ -1,0 +1,54 @@
+{
+  "bonferroni": "off",
+  "differ_feature": "H",
+  "which_is_higher": "first",
+  "list1": {
+    "PercNA": {
+      "matters": false, 
+      "value": [
+        "", 
+        ""
+      ], 
+      "categorical": false
+    }, 
+    "RandomNomCat": {
+      "matters": false, 
+      "value": "question", 
+      "categorical": true
+    }, 
+    "H": {
+      "matters": false, 
+      "value": [
+        "", 
+        ""
+      ], 
+      "categorical": false
+    }
+  }, 
+  "list2": {
+    "PercNA": {
+      "matters": false, 
+      "value": [
+        "", 
+        ""
+      ], 
+      "categorical": false
+    }, 
+    "RandomNomCat": {
+      "matters": false, 
+      "value": "question", 
+      "categorical": true
+    }, 
+    "H": {
+      "matters": false, 
+      "value": [
+        "", 
+        ""
+      ], 
+      "categorical": false
+    }
+  }, 
+  "same_features": [
+  ], 
+  "n": "2"
+}

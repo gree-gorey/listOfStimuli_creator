@@ -1,22 +1,56 @@
 # -*- coding:utf-8 -*-
 
-import codecs
+try:
+    print float('0,01')
+except ValueError as x:
+    print x
 
-with codecs.open('./data/verbs.tsv', 'r', 'utf-8') as f:
-    lines = f.readlines()
+try:
+    print int('0.01')
+except ValueError as x:
+    print x
+# from scipy import stats
+# import numpy as np
+# import csv
+#
+# with open('/home/gree-gorey/Py/slg/slg/static/output/list_1.tsv', 'rb') as f:
+#     cf = csv.DictReader(f, delimiter="\t")
+#     arr1 = []
+#     for row in cf:
+#         arr1.append(float(row['H']))
+#
+# with open('/home/gree-gorey/Py/slg/slg/static/output/list_2.tsv', 'rb') as f:
+#     cf = csv.DictReader(f, delimiter="\t")
+#     arr2 = []
+#     for row in cf:
+#         arr2.append(float(row['H']))
 
-with codecs.open('./data/verbs_new.tsv', 'w', 'utf-8') as w:
+# print np.std(arr1, ddof=1)
+# print np.std(arr1)
 
-    for line in lines:
-        new_line = list()
+# arr1 = range(15)
+# arr2 = range(13)
+#
+# result = stats.mannwhitneyu(arr1, arr2, alternative='two-sided')
 
-        columns = line.rstrip().split('\t', 18)
-        name = u'{}. {} ({})'.format(columns[0], columns[1], columns[2])
-        new_line.append(name)
+# levene = stats.levene(arr1, arr2, center='median', proportiontocut=0.05)
+# print levene
+#
+# result = stats.ttest_ind(arr1, arr2, False)
+# print result
+# kruskalwallis = stats.mstats.kruskalwallis(arr1, arr2)
+# print kruskalwallis
 
-        new_line += columns[3::]
-
-        w.write(u'\t'.join(new_line) + u'\n')
+# # result = stats.wilcoxon(arr1, arr2)
+#
+# # result = stats.ranksums(arr1, arr2)
+#
+# t_value = result[0]
+# p_value = result[1]
+#
+# print result
+#
+# print t_value, p_value
 
 
 

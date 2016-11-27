@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import os
-import math
+# import math
 import time
 import random
 import codecs
@@ -18,11 +18,11 @@ __author__ = 'gree-gorey'
 class Store:
     def __init__(self):
         self.words = list()
-        self.list_number = 2
+        self.lists_number = 2
         self.min = dict()
         self.max = dict()
-        self.lists = dict()  # словарь, ключ -- номер листа, значение -- словарь с начальными данными
-        self.list_outputs = dict()  # словарь, ключ -- номер листа, значение -- словарь с полученными данными
+        self.lists = dict()  # словарь, ключ -- 'list_1', значение -- массив с исходными векторами (=словами)
+        self.list_outputs = dict()  # словарь, ключ -- 'list_1', значение -- массив с отобранными векторами (=словами)
         self.minimum = None
         self.length = 0
         self.number_of_same = 0
@@ -34,17 +34,21 @@ class Store:
         self.p_values = list()
         self.time_begin = None
         self.success = True
-        self.list_equality_counter = dict()
-        self.should_append = dict()
+        self.list_equality_counter = dict()  # словарь, ключ -- 'list_1', значение -- хэш-счетчик равновесия для данного листа
+        self.should_append = dict()  # словарь, ключ -- 'list_1', значение -- хэш
         self.numeric_features = list()
+        self.numeric_features_range = dict()  # словарь, ключ -- имя колич переменной, значение -- словарь из min и max
         self.categorical_features = dict()
         self.categorical_features_list = list()
+        self.distance_for_the_list = dict()
+        self.word_to_pop_from_the_list = dict()
+        self.list_mean = dict()
         self.len_of_numeric = 0
         self.len_of_categorical = 0
         self.parameters = Parameters()
 
     def get_max_list_length(self):
-        return min(len(self.first_list), len(self.second_list)) if self.list_number == 2 else len(self.first_list)
+        return min([len(self.lists[list_name]) for list_name in self.lists])
 
     def read_data(self, path):
         with codecs.open(path + '/data/data.tsv', 'r', 'utf-8') as f:
@@ -66,6 +70,20 @@ class Store:
         self.len_of_numeric = len(self.numeric_features)
         self.len_of_categorical = len(self.categorical_features)
 
+        first_word_line = lines[2]
+        columns = first_word_line.rstrip().split('\t')
+        for feature, value in zip(features_list, columns[1::]):
+            if features_dict[feature] == 'int':
+                self.numeric_features_range[feature] = {
+                    'min': int(value),
+                    'max': int(value)
+                }
+            elif features_dict[feature] == 'float':
+                self.numeric_features_range[feature] = {
+                    'min': float(value),
+                    'max': float(value)
+                }
+
         for line in lines[2::]:
             self.words.append(Word())
 
@@ -75,10 +93,18 @@ class Store:
             for feature, value in zip(features_list, columns[1::]):
                 if features_dict[feature] == 'int':
                     self.words[-1].features[feature] = int(value)
+                    if self.words[-1].features[feature] < self.numeric_features_range[feature]['min']:
+                        self.numeric_features_range[feature]['min'] = self.words[-1].features[feature]
+                    if self.words[-1].features[feature] > self.numeric_features_range[feature]['max']:
+                        self.numeric_features_range[feature]['max'] = self.words[-1].features[feature]
                 elif features_dict[feature] == 'float':
                     self.words[-1].features[feature] = float(value)
+                    if self.words[-1].features[feature] < self.numeric_features_range[feature]['min']:
+                        self.numeric_features_range[feature]['min'] = self.words[-1].features[feature]
+                    if self.words[-1].features[feature] > self.numeric_features_range[feature]['max']:
+                        self.numeric_features_range[feature]['max'] = self.words[-1].features[feature]
                 else:
-                    if value != 'None':
+                    if value != 'NR':
                         self.words[-1].features[feature] = value
                         if value not in self.categorical_features[feature]:
                             self.categorical_features[feature].append(value)
@@ -89,10 +115,10 @@ class Store:
             self.categorical_features[feature] = sorted(self.categorical_features[feature])
 
     def reset_counters(self):
-        for feature, parameters in self.first_list_equality_counter.iteritems():
+        for feature, parameters in self.list_equality_counter['list_1'].iteritems():
             for parameter, value in parameters.iteritems():
                 parameters[parameter] = 0
-        for feature, parameters in self.second_list_equality_counter.iteritems():
+        for feature, parameters in self.list_equality_counter['list_2'].iteritems():
             for parameter, value in parameters.iteritems():
                 parameters[parameter] = 0
 
@@ -100,15 +126,27 @@ class Store:
         # print self.first_list_equality_counter
 
     def generate_one(self):
-        while len(self.first_list_output) < self.parameters.length:
-            self.check_words_for_allowance('first')
-            for i, word in enumerate(self.first_list):
+        self.list_outputs['list_1'] = list()
+        while len(self.list_outputs['list_1']) < self.parameters.length:
+            # print 'foo'
+            self.check_words_for_allowance('list_1')
+            # break
+            for i, word in enumerate(self.lists['list_1']):
                 if word.allowed:
-                    self.first_list_output.append(word)
-                    del self.first_list[i]
+                    # print 'foo'
+                    self.list_outputs['list_1'].append(word)
+                    del self.lists['list_1'][i]
+                    if len(self.list_outputs['list_1']) == self.parameters.length:
+                        break
 
     def generate(self):
+        for n in range(1, self.lists_number+1):
+            self.list_outputs['list_{}'.format(n)] = list()
+
+        # print 'x'
+
         while self.sharp():
+            # print 'foo'
 
             # Сбрасываем счетчики для 50/50
             self.reset_counters()
@@ -134,7 +172,7 @@ class Store:
                 # начинаем добавлять слова с ближайшими векторами
                 self.add_closest()
                 # как только размер листа больше 5, начинаем проверять
-                if len(self.first_list_output) > 5:
+                if len(self.list_outputs['list_1']) > 5:
                     self.test_and_fix()
 
     def create_equality_counter(self, list_parameters_from_client):
@@ -166,20 +204,20 @@ class Store:
 
     def normalize(self):
         # копируем фичи первого слова, чтобы было с чего начать сравнивать
-        self.min = self.first_list[0].features.copy()
-        self.max = self.first_list[0].features.copy()
+        self.min = self.lists['list_1'][0].features.copy()
+        self.max = self.lists['list_1'][0].features.copy()
 
         # находим минимум и максимум для всех фич в листах
-        self.find_min_max(self.first_list)
-        self.find_min_max(self.second_list)
+        self.find_min_max(self.lists['list_1'])
+        self.find_min_max(self.lists['list_2'])
 
         # нормализуем
-        for word in self.first_list:
+        for word in self.lists['list_1']:
             word.normalized_features = word.features.copy()
             for key in word.features:
                 if type(word.features[key]) == float:
                     word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
-        for word in self.second_list:
+        for word in self.lists['list_2']:
             word.normalized_features = word.features.copy()
             for key in word.features:
                 if type(word.features[key]) == float:
@@ -188,18 +226,20 @@ class Store:
     def create_zip(self):
         path = os.path.dirname(os.path.realpath(__file__))
 
-        first_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(path + '/static/output/list_1.tsv', u'w', u'utf-8') as w:
-            w.write(first_list_head)
-            for word in self.first_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
+        # print self.list_outputs
 
-        if self.list_number == 2:
-        second_list_head = 'name\t' + '\t'.join(self.first_list_output[0].features.keys()) + '\r\n'
-        with codecs.open(path + '/static/output/list_2.tsv', u'w', u'utf-8') as w:
-            w.write(second_list_head)
-            for word in self.second_list_output:
-                w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
+        for list_key in self.list_outputs:
+            if self.list_outputs[list_key]:
+                # print self.list_outputs[list_key]
+                list_head = 'name\t' + '\t'.join(self.list_outputs[list_key][0].features.keys()) + '\r\n'
+                with codecs.open(path + '/static/output/{}.tsv'.format(list_key), 'w', 'utf-8') as w:
+                    w.write(list_head)
+                    for word in self.list_outputs[list_key]:
+                        for key in word.features:
+                            if word.features[key] is None:
+                                word.features[key] = 'NR'
+
+                        w.write(word.name + u'\t' + u'\t'.join([str(word.features[key]) for key in word.features]) + u'\r\n')
 
         table = self.create_final_table()
 
@@ -207,12 +247,13 @@ class Store:
             w.write(table)
 
         z = zipfile.ZipFile(path + '/static/output/results.zip', u'w')
-        z.write(path + '/static/output/list_1.tsv', basename(path + '/static/output/list_1.tsv'))
-        z.write(path + '/static/output/list_2.tsv', basename(path + '/static/output/list_2.tsv'))
+
+        for list_key in self.list_outputs:
+            z.write(path + '/static/output/{}.tsv'.format(list_key), basename(path + '/static/output/{}.tsv'.format(list_key)))
         z.write(path + '/static/output/statistics.tsv', basename(path + '/static/output/statistics.tsv'))
 
-        os.remove(path + '/static/output/list_1.tsv')
-        os.remove(path + '/static/output/list_2.tsv')
+        for list_key in self.list_outputs:
+            os.remove(path + '/static/output/{}.tsv'.format(list_key))
         os.remove(path + '/static/output/statistics.tsv')
 
     def create_table_per_list(self, list_output, list_name):
@@ -225,7 +266,7 @@ class Store:
 
         means = [str(np.mean(list_features[feature])) for feature in self.numeric_features]
 
-        list1_mean = list_name + '\tmean\t' + '\t'.join(means) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        list1_mean = list_name + '\tmean\t' + '\t'.join(means) + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_mean
 
         # print self.numeric_features
@@ -234,17 +275,17 @@ class Store:
 
         mins = [str(np.min(list_features[feature])) for feature in self.numeric_features]
 
-        list1_min = '\tmin\t' + '\t'.join(mins) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        list1_min = '\tmin\t' + '\t'.join(mins) + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_min
 
         maxes = [str(np.max(list_features[feature])) for feature in self.numeric_features]
 
-        list1_max = '\tmax\t' + '\t'.join(maxes) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        list1_max = '\tmax\t' + '\t'.join(maxes) + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_max
 
-        sd = [str(np.std(list_features[feature])) for feature in self.numeric_features]
+        sd = [str(np.std(list_features[feature], ddof=1)) for feature in self.numeric_features]
 
-        list1_sd = '\tSD\t' + '\t'.join(sd) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        list1_sd = '\tSD\t' + '\t'.join(sd) + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_sd
 
         ratios = list()
@@ -271,7 +312,7 @@ class Store:
         for ratio in ratios:
             ratio_string += '\t'
             if ratio is None:
-                ratio_string += 'None'
+                ratio_string += 'NR'
             else:
                 for key in ratio:
                     string = key + ': ' + str(ratio[key]) + '; '
@@ -279,12 +320,12 @@ class Store:
 
         # print ratio_string
 
-        list1_ratio = '\tratio\t' + '\t'.join(['None'] * self.len_of_numeric) + ratio_string + '\r\n'
+        list1_ratio = '\tratio\t' + '\t'.join(['NR'] * self.len_of_numeric) + ratio_string + '\r\n'
         table_per_list += list1_ratio
 
         shapiro = [str(stats.shapiro(list_features[feature])[1]) for feature in self.numeric_features]
 
-        list1_shapiro = '\tShapiro, p-value\t' + '\t'.join(shapiro) + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        list1_shapiro = '\tShapiro, p-value\t' + '\t'.join(shapiro) + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         table_per_list += list1_shapiro
 
         return table_per_list
@@ -311,7 +352,7 @@ class Store:
                         t_value = None
                         p_value = 1
                     else:
-                        result = stats.mannwhitneyu(arr1, arr2)
+                        result = stats.mannwhitneyu(arr1, arr2, alternative='two-sided')
                         t_value = result[0]
                         p_value = result[1]
             else:
@@ -336,7 +377,7 @@ class Store:
                 t_value = None
                 p_value = 1
             else:
-                result = stats.mannwhitneyu(arr1, arr2)
+                result = stats.mannwhitneyu(arr1, arr2, alternative='two-sided')
                 t_value = result[0]
                 p_value = result[1]
 
@@ -349,32 +390,32 @@ class Store:
 
         first_list_features = dict()
         for feature in self.numeric_features:
-            first_list_features[feature] = [word.features[feature] for word in self.first_list_output]
+            first_list_features[feature] = [word.features[feature] for word in self.list_outputs['list_1']]
 
         second_list_features = dict()
         for feature in self.numeric_features:
-            second_list_features[feature] = [word.features[feature] for word in self.second_list_output]
+            second_list_features[feature] = [word.features[feature] for word in self.list_outputs['list_2']]
 
         list_of_test_results = [self.return_test_results(first_list_features[feature], second_list_features[feature]) for feature in self.numeric_features]
 
         test_name = 'statistics\ttest name\t' + '\t'.join([result_list[0] for result_list in list_of_test_results])\
-                    + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+                    + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         stat_table += test_name
 
-        t_value = '\tt-value\t' + '\t'.join([str(result_list[1]) for result_list in list_of_test_results])\
-                  + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+        t_value = '\tstatistics value\t' + '\t'.join([str(result_list[1]) for result_list in list_of_test_results])\
+                  + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         stat_table += t_value
 
         p_value = '\tp-value\t' + '\t'.join([str(result_list[2]) for result_list in list_of_test_results]) \
-                  + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+                  + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         stat_table += p_value
 
         df = '\tDF\t' + '\t'.join([str(result_list[3]) for result_list in list_of_test_results]) \
-             + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+             + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         stat_table += df
 
         levene = '\tLevene, p-value\t' + '\t'.join([str(result_list[4]) for result_list in list_of_test_results]) \
-                 + '\t' + '\t'.join(['None'] * self.len_of_categorical) + '\r\n'
+                 + '\t' + '\t'.join(['NR'] * self.len_of_categorical) + '\r\n'
         stat_table += levene
 
         return stat_table
@@ -384,105 +425,79 @@ class Store:
         header = '\t\t' + '\t'.join(self.numeric_features) + '\t' + '\t'.join(self.categorical_features) + '\r\n'
         table += header
 
-        table += self.create_table_per_list(self.first_list_output, 'list 1')
-        table += '\r\n'
-        if self.list_number == 2:
-            table += self.create_table_per_list(self.second_list_output, 'list 2')
+        for n in xrange(1, self.lists_number+1):
+            table += self.create_table_per_list(self.list_outputs['list_{}'.format(n)], 'list {}'.format(n))
             table += '\r\n'
 
-        table += self.create_stat_table()
+        if self.lists_number > 1:
+            table += self.create_stat_table()
 
         return table
 
-    def set_should_append(self, list_equality_counter, list_name):
-        if list_name == 'first':
-            self.should_append_first = dict()
-            for feature in list_equality_counter:
-                keys = list_equality_counter[feature].keys()
-                if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
-                    self.should_append_first[feature] = keys[0]
-                elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
-                    self.should_append_first[feature] = keys[1]
+    def set_should_append(self, list_equality_counter, list_name_key):
+        self.should_append[list_name_key] = dict()
+
+        # print list_equality_counter
+
+        for feature in list_equality_counter:
+            keys = list_equality_counter[feature].keys()
+
+            # print keys
+
+            if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
+                self.should_append[list_name_key][feature] = keys[0]
+            elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
+                self.should_append[list_name_key][feature] = keys[1]
+
+    def check_words_for_allowance(self, list_name_key):
+        # оставляем только неравные параметры, остальные неважны в этой итерации
+        self.set_should_append(self.list_equality_counter[list_name_key], list_name_key)
+
+        # print self.should_append
+
+        if self.should_append[list_name_key]:
+            for word in self.lists[list_name_key]:
+                for feature in self.should_append[list_name_key]:
+                    if word.features[feature] != self.should_append[list_name_key][feature]:
+                        word.allowed = False
         else:
-            self.should_append_second = dict()
-            for feature in list_equality_counter:
-                keys = list_equality_counter[feature].keys()
-                if list_equality_counter[feature][keys[0]] < list_equality_counter[feature][keys[1]]:
-                    self.should_append_second[feature] = keys[0]
-                elif list_equality_counter[feature][keys[0]] > list_equality_counter[feature][keys[1]]:
-                    self.should_append_second[feature] = keys[1]
+            # print list_name_key
+            # print self.lists[list_name_key]
+            for word in self.lists[list_name_key]:
+                word.allowed = True
+                # print 'foo'
 
-    def check_words_for_allowance(self, list_name):
-        if list_name == 'first':
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.first_list_equality_counter, 'first')
+    def add_features_into_counter(self, word, list_name_key):
+        for feature in self.list_equality_counter[list_name_key]:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.list_equality_counter[list_name_key][feature]:
+                # print word.features[feature]
+                self.list_equality_counter[list_name_key][feature][word.features[feature]] += 1
 
-            if self.should_append_first:
-                for word in self.first_list:
-                    for feature in self.should_append_first:
-                        if word.features[feature] != self.should_append_first[feature]:
-                            word.allowed = False
-            else:
-                for word in self.first_list:
-                    word.allowed = True
 
-        else:
-            # оставляем только неравные параметры, остальные неважны в этой итерации
-            self.set_should_append(self.second_list_equality_counter, 'second')
-
-            if self.should_append_second:
-                for word in self.second_list:
-                    for feature in self.should_append_second:
-                        if word.features[feature] != self.should_append_second[feature]:
-                            word.allowed = False
-            else:
-                for word in self.second_list:
-                    word.allowed = True
-
-    def add_features_into_counter(self, word, list_name):
-        if list_name == 'first':
-            for feature in self.first_list_equality_counter:
-                # если значение этого параметра есть среди значений в счетчике, то плюс 1
-                if word.features[feature] in self.first_list_equality_counter[feature]:
-                    # print word.features[feature]
-                    self.first_list_equality_counter[feature][word.features[feature]] += 1
-
-        else:
-            for feature in self.second_list_equality_counter:
-                # если значение этого параметра есть среди значений в счетчике, то плюс 1
-                if word.features[feature] in self.second_list_equality_counter[feature]:
-                    self.second_list_equality_counter[feature][word.features[feature]] += 1
-
-    def remove_features_from_counter(self, word, list_name):
-        if list_name == 'first':
-            for feature in self.first_list_equality_counter:
-                # если значение этого параметра есть среди значений в счетчике, то минус 1
-                if word.features[feature] in self.first_list_equality_counter[feature]:
-                    # print word.features[feature]
-                    self.first_list_equality_counter[feature][word.features[feature]] -= 1
-
-        else:
-            for feature in self.second_list_equality_counter:
-                # если значение этого параметра есть среди значений в счетчике, то минус 1
-                if word.features[feature] in self.second_list_equality_counter[feature]:
-                    self.second_list_equality_counter[feature][word.features[feature]] -= 1
+    def remove_features_from_counter(self, word, list_name_key):
+        for feature in self.list_equality_counter[list_name_key]:
+            # если значение этого параметра есть среди значений в счетчике, то минус 1
+            if word.features[feature] in self.list_equality_counter[list_name_key][feature]:
+                # print word.features[feature]
+                self.list_equality_counter[list_name_key][feature][word.features[feature]] -= 1
 
     def add_closest(self):
         ##########
         # LIST 1 #
         ##########
 
-        self.check_words_for_allowance('first')
+        self.check_words_for_allowance('list_1')
 
         # вектор расстояния до другого листа
-        distance_for_first_list = []
+        self.distance_for_the_list['list_1'] = list()
         for i in xrange(self.number_of_same):
             # длина этого массива равна длине массива одинаковых фич
             # значения -- это среднее значение фичи по всем словам второго листа
-            distance_for_first_list.append(mean([word.same[i] for word in self.second_list_output]))
+            self.distance_for_the_list['list_1'].append(mean([word.same[i] for word in self.list_outputs['list_2']]))
 
         index = 0
-        for i, word in enumerate(self.first_list):
+        for i, word in enumerate(self.lists['list_1']):
             if word.allowed:
                 index = i
                 break
@@ -491,24 +506,24 @@ class Store:
         # т.к. все они максимум по 1
         minimum = self.number_of_same
         # обходим первый лист и ищем слово с ближайшим вектором
-        for i in xrange(len(self.first_list)):
-            if self.first_list[i].allowed:
+        for i in xrange(len(self.lists['list_1'])):
+            if self.lists['list_1'][i].allowed:
                 # считаем расстояние (Эвклидово??) от текущего слова до "среднего" вектора второго листа
-                from_distance = sum([abs(self.first_list[i].same[j] - distance_for_first_list[j]) for j in xrange(self.number_of_same)])
+                from_distance = sum([abs(self.lists['list_1'][i].same[j] - self.distance_for_the_list['list_1'][j]) for j in xrange(self.number_of_same)])
                 # находим среди всех минимум и запоминаем индекс
                 if from_distance < minimum:
                     minimum = from_distance
                     index = i
 
-        word = self.first_list[index]
+        word = self.lists['list_1'][index]
 
         # добавляем найденное слово в аутпут и удаляем из листа
-        self.first_list_output.append(word)
+        self.list_outputs['list_1'].append(word)
 
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'first')
+        self.add_features_into_counter(word, 'list_1')
 
-        del self.first_list[index]
+        del self.lists['list_1'][index]
 
         # print '\nAdd closest'
         # print 'Should append: ', self.should_append_first
@@ -519,103 +534,103 @@ class Store:
         # LIST 2 #
         ##########
 
-        self.check_words_for_allowance('second')
+        self.check_words_for_allowance('list_2')
 
         index = 0
-        for i, word in enumerate(self.second_list):
+        for i, word in enumerate(self.lists['list_2']):
             if word.allowed:
                 index = i
                 break
 
         # повторяем те же действия для второго листа
-        distance_for_second_list = []
+        self.distance_for_the_list['list_2'] = list()
         for i in xrange(self.number_of_same):
-            distance_for_second_list.append(mean([word.same[i] for word in self.first_list_output]))
+            self.distance_for_the_list['list_2'].append(mean([word.same[i] for word in self.list_outputs['list_1']]))
         minimum = self.number_of_same + 1
-        for i in xrange(len(self.second_list)):
-            if self.second_list[i].allowed:
-                from_distance = sum([abs(self.second_list[i].same[j] - distance_for_second_list[j]) for j in xrange(self.number_of_same)])
+        for i in xrange(len(self.lists['list_2'])):
+            if self.lists['list_2'][i].allowed:
+                from_distance = sum([abs(self.lists['list_2'][i].same[j] - self.distance_for_the_list['list_2'][j]) for j in xrange(self.number_of_same)])
                 if from_distance < minimum:
                     minimum = from_distance
                     index = i
 
-        word = self.second_list[index]
+        word = self.lists['list_2'][index]
 
         # добавляем найденное слово в аутпут и удаляем из листа
-        self.second_list_output.append(word)
+        self.list_outputs['list_2'].append(word)
 
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'second')
+        self.add_features_into_counter(word, 'list_2')
 
-        del self.second_list[index]
+        del self.lists['list_2'][index]
 
     def compensate(self, first_list_mean, second_list_mean, i):
         # print 777
 
         # если это среднее больше в первом листе
         if first_list_mean > second_list_mean:
-            self.check_words_for_allowance('first')
+            self.check_words_for_allowance('list_1')
 
             lowest_from_rest = 1
             first_list_index = 0
-            for j, word in enumerate(self.first_list):
+            for j, word in enumerate(self.lists['list_1']):
                 if word.allowed:
                     if word.normalized_features[i] < lowest_from_rest:
                         lowest_from_rest = word.normalized_features[i]
                         first_list_index = j
 
-            self.check_words_for_allowance('second')
+            self.check_words_for_allowance('list_2')
 
             highest_from_rest = 0
             second_list_index = 0
-            for j, word in enumerate(self.second_list):
+            for j, word in enumerate(self.lists['list_2']):
                 if word.allowed:
                     if word.normalized_features[i] > highest_from_rest:
                         highest_from_rest = word.normalized_features[i]
                         second_list_index = j
 
         else:
-            self.check_words_for_allowance('second')
+            self.check_words_for_allowance('list_2')
 
             lowest_from_rest = 1
             second_list_index = 0
-            for j, word in enumerate(self.second_list):
+            for j, word in enumerate(self.lists['list_2']):
                 if word.allowed:
                     if word.normalized_features[i] < lowest_from_rest:
                         lowest_from_rest = word.normalized_features[i]
                         second_list_index = j
 
-            self.check_words_for_allowance('first')
+            self.check_words_for_allowance('list_1')
 
             highest_from_rest = 0
             first_list_index = 0
-            for j, word in enumerate(self.first_list):
+            for j, word in enumerate(self.lists['list_1']):
                 if word.allowed:
                     if word.normalized_features[i] > highest_from_rest:
                         highest_from_rest = word.normalized_features[i]
                         first_list_index = j
 
-        word = self.first_list[first_list_index]
-        self.first_list_output.append(word)
+        word = self.lists['list_1'][first_list_index]
+        self.list_outputs['list_1'].append(word)
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'first')
-        del self.first_list[first_list_index]
+        self.add_features_into_counter(word, 'list_1')
+        del self.lists['list_1'][first_list_index]
 
         # print '\nCompensate'
         # print 'Should append: ', self.should_append_first
         # print 'Arguments feature of added word: {}'.format(word.features['arguments'])
         # print 'Counter: ', self.first_list_equality_counter
 
-        word = self.second_list[second_list_index]
-        self.second_list_output.append(word)
+        word = self.lists['list_2'][second_list_index]
+        self.list_outputs['list_2'].append(word)
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'second')
-        del self.second_list[second_list_index]
+        self.add_features_into_counter(word, 'list_2')
+        del self.lists['list_2'][second_list_index]
 
     def test_and_fix(self):
         for i in self.same:
-            p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
-                                     [word.normalized_features[i] for word in self.second_list_output])
+            p_value_same = self.test([word.normalized_features[i] for word in self.list_outputs['list_1']],
+                                     [word.normalized_features[i] for word in self.list_outputs['list_2']])
 
             # if p_value_same < 0.2:
             if p_value_same < self.parameters.alpha * 4:
@@ -626,26 +641,23 @@ class Store:
                     # print 888
 
                     # возвращаем по одному слову из аутпута в общий лист
-                    word_first_list_to_pop = self.first_list_output.pop(random.randint(0, len(self.first_list_output)-1))
-                    word_second_list_to_pop = self.second_list_output.pop(random.randint(0, len(self.second_list_output)-1))
+                    self.word_to_pop_from_the_list['list_1'] = self.list_outputs['list_1'].pop(random.randint(0, len(self.list_outputs['list_1'])-1))
+                    self.word_to_pop_from_the_list['list_2'] = self.list_outputs['list_2'].pop(random.randint(0, len(self.list_outputs['list_2'])-1))
 
-                    self.remove_features_from_counter(word_first_list_to_pop, 'first')
-                    self.remove_features_from_counter(word_second_list_to_pop, 'second')
+                    self.remove_features_from_counter(self.word_to_pop_from_the_list['list_1'], 'list_1')
+                    self.remove_features_from_counter(self.word_to_pop_from_the_list['list_2'], 'list_2')
 
-                    # print 'Features were removed. Arguments feature of removed word: {}'.format(word_first_list_to_pop.features['arguments'])
-                    # print 'Counter: ', self.first_list_equality_counter
-
-                    self.first_list.append(word_first_list_to_pop)
-                    self.second_list.append(word_second_list_to_pop)
+                    self.lists['list_1'].append(self.word_to_pop_from_the_list['list_1'])
+                    self.lists['list_2'].append(self.word_to_pop_from_the_list['list_2'])
 
                 # по всем словам в аутпуте считаем среднее параметра i
-                first_list_mean = mean([word.normalized_features[i] for word in self.first_list_output])
-                second_list_mean = mean([word.normalized_features[i] for word in self.second_list_output])
+                self.list_mean['list_1'] = mean([word.normalized_features[i] for word in self.list_outputs['list_1']])
+                self.list_mean['list_2'] = mean([word.normalized_features[i] for word in self.list_outputs['list_2']])
 
-                self.compensate(first_list_mean, second_list_mean, i)
+                self.compensate(self.list_mean['list_1'], self.list_mean['list_2'], i)
 
-            p_value_same = self.test([word.normalized_features[i] for word in self.first_list_output],
-                                     [word.normalized_features[i] for word in self.second_list_output])
+            p_value_same = self.test([word.normalized_features[i] for word in self.list_outputs['list_1']],
+                                     [word.normalized_features[i] for word in self.list_outputs['list_2']])
 
             # if p_value_same < 0.15:
             if p_value_same < self.parameters.alpha * 3:
@@ -669,14 +681,14 @@ class Store:
         return high, low
 
     def differentiate(self):
-        for word in self.first_list:
+        for word in self.lists['list_1']:
             word.value_of_differ_feature = word.normalized_features[self.key_for_differ_feature]
-        for word in self.second_list:
+        for word in self.lists['list_2']:
             word.value_of_differ_feature = word.normalized_features[self.key_for_differ_feature]
         if self.which_higher == 'first':
-            self.first_list, self.second_list = self.high_low(self.first_list, self.second_list)
+            self.lists['list_1'], self.lists['list_2'] = self.high_low(self.lists['list_1'], self.lists['list_2'])
         elif self.which_higher == 'second':
-            self.second_list, self.first_list = self.high_low(self.second_list, self.first_list)
+            self.lists['list_2'], self.lists['list_1'] = self.high_low(self.lists['list_2'], self.lists['list_1'])
 
     def create_list_from_to_choose(self, parameters_for_one_list):
         filtered_list = []
@@ -688,14 +700,14 @@ class Store:
         return filtered_list
 
     def split(self):
-        if self.first_list == self.second_list:
+        if self.lists['list_1'] == self.lists['list_2']:
             new = []
-            new += self.first_list
+            new += self.lists['list_1']
             random.shuffle(new)
-            self.first_list = []
-            self.first_list += new[:len(new)/2]
-            self.second_list = []
-            self.second_list += new[len(new)/2:]
+            self.lists['list_1'] = []
+            self.lists['list_1'] += new[:len(new)/2]
+            self.lists['list_2'] = []
+            self.lists['list_2'] += new[len(new)/2:]
 
     def setup_parameters(self):
         if self.parameters.bonferroni != 'off':
@@ -705,55 +717,54 @@ class Store:
         self.number_of_same = len(self.same)
         self.length = self.parameters.length
         self.statistics = self.parameters.statistics
-        for word in self.first_list:
-            # это массив из значений фич, которые не должны отличаться
-            word.same = [word.normalized_features[key] for key in self.same]
-        for word in self.second_list:
-            word.same = [word.normalized_features[key] for key in self.same]
+        for list_name_key in self.lists:
+            for word in self.lists[list_name_key]:
+                # это массив из значений фич, которые не должны отличаться
+                word.same = [word.normalized_features[key] for key in self.same]
 
     def add_first(self):
-        self.first_list += self.first_list_output
-        self.second_list += self.second_list_output
+        self.lists['list_1'] += self.list_outputs['list_1']
+        self.lists['list_2'] += self.list_outputs['list_2']
 
-        self.first_list_output = []
-        self.second_list_output = []
-
-        # вытаскиваем случайное слово из листа
-        index = random.randint(0, len(self.first_list)-1)
-
-        word = self.first_list[index]
-
-        # прибавляем параметры добавленного слова в счетчик
-        for feature in self.first_list_equality_counter:
-            # если значение этого параметра есть среди значений в счетчике, то плюс 1
-            if word.features[feature] in self.first_list_equality_counter[feature]:
-                self.first_list_equality_counter[feature][word.features[feature]] += 1
-
-        self.first_list_output.append(word)
-        del self.first_list[index]
+        self.list_outputs['list_1'] = list()
+        self.list_outputs['list_2'] = list()
 
         # вытаскиваем случайное слово из листа
-        index = random.randint(0, len(self.second_list)-1)
+        index = random.randint(0, len(self.lists['list_1'])-1)
 
-        word = self.second_list[index]
+        word = self.lists['list_1'][index]
 
         # прибавляем параметры добавленного слова в счетчик
-        for feature in self.second_list_equality_counter:
+        for feature in self.list_equality_counter['list_1']:
             # если значение этого параметра есть среди значений в счетчике, то плюс 1
-            if word.features[feature] in self.second_list_equality_counter[feature]:
-                self.second_list_equality_counter[feature][word.features[feature]] += 1
+            if word.features[feature] in self.list_equality_counter['list_1'][feature]:
+                self.list_equality_counter['list_1'][feature][word.features[feature]] += 1
 
-        self.second_list_output.append(word)
-        del self.second_list[index]
+        self.list_outputs['list_1'].append(word)
+        del self.lists['list_1'][index]
+
+        # вытаскиваем случайное слово из листа
+        index = random.randint(0, len(self.lists['list_2'])-1)
+
+        word = self.lists['list_2'][index]
+
+        # прибавляем параметры добавленного слова в счетчик
+        for feature in self.list_equality_counter['list_2']:
+            # если значение этого параметра есть среди значений в счетчике, то плюс 1
+            if word.features[feature] in self.list_equality_counter['list_2'][feature]:
+                self.list_equality_counter['list_2'][feature][word.features[feature]] += 1
+
+        self.list_outputs['list_2'].append(word)
+        del self.lists['list_2'][index]
 
     def sharp(self):
-        return len(self.first_list_output) != self.length
+        return len(self.list_outputs['list_1']) != self.length
 
     def less(self):
-        return len(self.first_list_output) < self.length
+        return len(self.list_outputs['list_1']) < self.length
 
     def equal(self):
-        return len(self.first_list_output) == self.length
+        return len(self.list_outputs['list_1']) == self.length
 
     def test(self, arr1, arr2):
         p_value = 0
@@ -769,7 +780,7 @@ class Store:
                     if equal(arr1, arr2):
                         p_value = 1
                     else:
-                        p_value = stats.mannwhitneyu(arr1, arr2)[1]
+                        p_value = stats.mannwhitneyu(arr1, arr2, alternative='two-sided')[1]
             else:
                 p_value = stats.ttest_ind(arr1, arr2, False)[1]
 
@@ -781,7 +792,7 @@ class Store:
             if equal(arr1, arr2):
                 p_value = 1
             else:
-                p_value = stats.mannwhitneyu(arr1, arr2)[1]
+                p_value = stats.mannwhitneyu(arr1, arr2, alternative='two-sided')[1]
         return p_value
 
 

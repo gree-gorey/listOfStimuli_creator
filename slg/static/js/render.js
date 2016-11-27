@@ -34,8 +34,8 @@ function renderEmptyParameters() {
     for (let i = 0; i < n; i++) {
         parameters["list"+(i+1)] = {};
 
-        for (let j = 0; j < numericFeatures.length; j++) {
-            parameters["list" + (i+1)][numericFeatures[j]] = {
+        for (let feature in numericFeatures) {
+            parameters["list" + (i+1)][feature] = {
                 "matters": false,
                 "value": null,
                 "categorical": false
@@ -57,8 +57,8 @@ function renderEmptyParameters() {
 function renderDifferOptions(result) {
     var differSelect = document.getElementById("differ_feature");
     var numericFeatures = result["numeric_features"];
-    for (let j = 0; j < numericFeatures.length; j++) {
-        let option = renderSameOption(numericFeatures[j]);
+    for (let feature in numericFeatures) {
+        let option = renderSameOption(feature);
         differSelect.appendChild(option);
     }
 }
@@ -66,8 +66,8 @@ function renderDifferOptions(result) {
 function renderSameFeatures(result) {
     var sameSelect = document.getElementById("same_features");
     var numericFeatures = result["numeric_features"];
-    for (let j = 0; j < numericFeatures.length; j++) {
-        let option = renderSameOption(numericFeatures[j]);
+    for (let feature in numericFeatures) {
+        let option = renderSameOption(feature);
         sameSelect.appendChild(option);
     }
 }
@@ -90,8 +90,9 @@ function renderFeatures(result, i) {
 
     var listNumericFeatures = document.getElementById("list" + i + "_numeric_features_table");
     var numericFeatures = result["numeric_features"];
-    for (let j = 0; j < numericFeatures.length; j++) {
-        let raw = renderNumericRow("list" + i, numericFeatures[j]);
+    // console.log(numericFeatures);
+    for (let feature in numericFeatures) {
+        let raw = renderNumericRow("list" + i, feature, numericFeatures[feature]);
         listNumericFeatures.appendChild(raw);
     }
 }
@@ -172,14 +173,14 @@ function renderOption(value) {
     return option;
 }
 
-function renderNumericRow(list, feature) {
+function renderNumericRow(list, feature, rangeHash) {
     var tr = document.createElement("tr");
 
     var tdName = document.createElement("td");
     tdName.innerHTML = feature;
 
     var tdRange = document.createElement("td");
-    tdRange.innerHTML = 'от <input id="' + list + '_' + feature + '_from" type="number"><span> до </span><input id="' + list + '_' + feature + '_to" type="number">';
+    tdRange.innerHTML = 'от <input id="' + list + '_' + feature + '_from" type="number" value="' + rangeHash['min'] + '"><span> до </span><input id="' + list + '_' + feature + '_to" type="number" value="' + rangeHash['max'] + '">';
 
     tr.appendChild(tdName);
     tr.appendChild(tdRange);

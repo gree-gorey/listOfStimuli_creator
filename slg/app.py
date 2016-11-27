@@ -2,10 +2,10 @@
 
 import os
 import time
-# import json
+import json
 import flask
 # import pickle
-# import codecs
+import codecs
 from random import shuffle
 import webbrowser
 import threading
@@ -50,19 +50,33 @@ def statistics():
                                  max=store.get_max_list_length())
 
 
-@app.route('/_get_features', methods=['GET', 'POST'])
-def get_features():
+@app.route('/_read_data_file', methods=['GET', 'POST'])
+def read_data_file():
     global store
 
     store.__init__()
 
+    result = dict()
+
     # считываем табличку с данными
-    store.read_data(path)
+    try:
+        store.read_data(path)
+        result['success'] = 'success'
+    except ValueError as error:
+        result['success'] = 'failure'
+        result['error'] = str(error)
+        # print error
+
+    return flask.jsonify(result=result)
+
+
+@app.route('/_get_features', methods=['GET', 'POST'])
+def get_features():
 
     result = {
         'categorical_features_list': store.categorical_features_list,
         'categorical_features': store.categorical_features,
-        'numeric_features': store.numeric_features
+        'numeric_features': store.numeric_features_range
     }
 
     return flask.jsonify(result=result)
@@ -70,13 +84,17 @@ def get_features():
 
 @app.route('/_get_features_for_statistics_page', methods=['GET', 'POST'])
 def get_features_for_statistics_page():
+    # print store.lists
     result = {
         'lens': [
-            len(store.first_list),
-            len(store.second_list)
+            len(store.lists['list_1']),
+            len(store.lists['list_2']) if 'list_2' in store.lists else None,
+            len(store.lists['list_3']) if 'list_3' in store.lists else None
         ],
-        'n': store.list_number
+        'n': store.lists_number
     }
+
+    print result
 
     return flask.jsonify(result=result)
 
@@ -92,34 +110,36 @@ def set_parameters():
     #     json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
 
     if int(parameters_from_client['n']) == 1:
-        store.list_number = 1
-        store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
+        # указываем количество листов
+        store.lists_number = 1
+        # просто фильтруем только те слова, которые в границах заданных пользователем
+        store.lists['list_1'] = store.create_list_from_to_choose(parameters_from_client['list1'])
 
         # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
-        store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
+        store.list_equality_counter['list_1'] = store.create_equality_counter(parameters_from_client['list1'])
 
         # перемешиваем лист
-        shuffle(store.first_list)
+        shuffle(store.lists['list_1'])
 
-        if len(store.first_list) == 0:
+        if len(store.lists['list_1']) == 0:
             result = 'failure'
             return flask.jsonify(result=result)
         else:
             result = 'success'
             return flask.jsonify(result=result)
 
-    else:
+    elif int(parameters_from_client['n']) == 2:
         # создаем в сторе предварительные листы
-        store.first_list = store.create_list_from_to_choose(parameters_from_client['list1'])
-        store.second_list = store.create_list_from_to_choose(parameters_from_client['list2'])
+        store.lists['list_1'] = store.create_list_from_to_choose(parameters_from_client['list1'])
+        store.lists['list_2'] = store.create_list_from_to_choose(parameters_from_client['list2'])
 
-        if len(store.first_list) == 0 or len(store.second_list) == 0:
+        if len(store.lists['list_1']) == 0 or len(store.lists['list_2']) == 0:
             result = 'failure'
             return flask.jsonify(result=result)
 
         # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
-        store.first_list_equality_counter = store.create_equality_counter(parameters_from_client['list1'])
-        store.second_list_equality_counter = store.create_equality_counter(parameters_from_client['list2'])
+        store.list_equality_counter['list_1'] = store.create_equality_counter(parameters_from_client['list1'])
+        store.list_equality_counter['list_2'] = store.create_equality_counter(parameters_from_client['list2'])
 
         # нормализуем все к шкале от 0 до 1
         store.normalize()
@@ -161,7 +181,7 @@ def create():
 
     # time.sleep(2)
 
-    if store.list_number == 1:
+    if store.lists_number == 1:
         store.parameters.length = int(parameters_from_client['length'])
 
         # собственно генерация листа
@@ -208,6 +228,7 @@ if __name__ == '__main__':
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        debug=True
+        debug=True,
+        threaded=True
     )
 

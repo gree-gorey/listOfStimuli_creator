@@ -19,7 +19,7 @@
 
     <!-- JS
     –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <!--<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>-->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/index.js') }}"></script>
 
     <!-- CSS
@@ -43,7 +43,7 @@
     <select id="number_of_lists">
         <option value="1">Один лист</option>
         <option value="2" selected>Два листа</option>
-        <option value="3">Три листа</option>
+        <!--<option value="3">Три листа</option>-->
     </select>
     <div class="w3-row">
         <button class="w3-btn" onClick="goToParameters();">Создать листы</button>
@@ -51,6 +51,18 @@
     <div class="w3-row meta">
         <b>author: </b><span>gree-gorey</span><br>
         <b>source code: </b><a href="https://github.com/gree-gorey/slg" target="_blank">slg v{{version}}</a>
+    </div>
+</div>
+
+<div id="successMessage" class="modal-dialog">
+    <div class="modal-content">
+        <p id="message" style="text-align: center;">
+            Ошибка при чтении файла с исходными данными.<br>
+            <b>Сообщение: </b><span id="error"></span>.
+        </p>
+        <div style="text-align: center;">
+            <button id="ok" class="w3-btn" onClick="hideSuccessMessage();">OK</button>
+        </div>
     </div>
 </div>
 

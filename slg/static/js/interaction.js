@@ -17,11 +17,12 @@ function setParameters() {
             parameters["list"+(j+1)][categoricalFeatures[i]]["value"] = document.getElementById("list"+(j+1) + "_" + categoricalFeatures[i]).value;
         }
 
-        for (let i = 0; i < numericFeatures.length; i++) {
-            parameters["list"+(j+1)][numericFeatures[i]]["matters"] = document.getElementById("list"+(j+1) + "_" + numericFeatures[i] + "_from").value != "" || document.getElementById("list"+(j+1) + "_" + numericFeatures[i] + "_to").value != "";
-            parameters["list"+(j+1)][numericFeatures[i]]["value"] = [
-                document.getElementById("list"+(j+1) + "_" + numericFeatures[i] + "_from").value,
-                document.getElementById("list"+(j+1) + "_" + numericFeatures[i] + "_to").value
+        for (let feature in numericFeatures) {
+            console.log(feature);
+            parameters["list"+(j+1)][feature]["matters"] = document.getElementById("list"+(j+1) + "_" + feature + "_from").value != "" || document.getElementById("list"+(j+1) + "_" + feature + "_to").value != "";
+            parameters["list"+(j+1)][feature]["value"] = [
+                document.getElementById("list"+(j+1) + "_" + feature + "_from").value,
+                document.getElementById("list"+(j+1) + "_" + feature + "_to").value
             ];
         }
     }
