@@ -94,7 +94,7 @@ def get_features_for_statistics_page():
         'n': store.lists_number
     }
 
-    print result
+    # print result
 
     return flask.jsonify(result=result)
 

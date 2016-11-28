@@ -1,14 +1,44 @@
 # -*- coding:utf-8 -*-
 
-try:
-    print float('0,01')
-except ValueError as x:
-    print x
+from slg.store import Store
+from slg.store import mean
 
-try:
-    print int('0.01')
-except ValueError as x:
-    print x
+store = Store()
+
+store.read_dummy_data_and_setup()
+
+store.normalize()
+
+store.list_outputs['list_1'] = store.lists['list_1'][:2:]
+store.lists['list_1'] = store.lists['list_1'][2::]
+
+store.list_outputs['list_2'] = store.lists['list_2'][4::]
+store.lists['list_2'] = store.lists['list_2'][:4:]
+
+print [word.normalized_features['first'] for word in store.lists['list_1']]
+print [word.normalized_features['first'] for word in store.lists['list_2']]
+print [word.normalized_features['first'] for word in store.list_outputs['list_1']]
+print [word.normalized_features['first'] for word in store.list_outputs['list_2']]
+
+store.list_mean['list_1'] = mean([word.normalized_features['first'] for word in store.list_outputs['list_1']])
+store.list_mean['list_2'] = mean([word.normalized_features['first'] for word in store.list_outputs['list_2']])
+
+print store.list_mean['list_1']
+print store.list_mean['list_2']
+
+store.compensate('first')
+
+print [word.normalized_features['first'] for word in store.lists['list_1']]
+print [word.normalized_features['first'] for word in store.lists['list_2']]
+print [word.normalized_features['first'] for word in store.list_outputs['list_1']]
+print [word.normalized_features['first'] for word in store.list_outputs['list_2']]
+
+store.list_mean['list_1'] = mean([word.normalized_features['first'] for word in store.list_outputs['list_1']])
+store.list_mean['list_2'] = mean([word.normalized_features['first'] for word in store.list_outputs['list_2']])
+
+print store.list_mean['list_1']
+print store.list_mean['list_2']
+
 # from scipy import stats
 # import numpy as np
 # import csv

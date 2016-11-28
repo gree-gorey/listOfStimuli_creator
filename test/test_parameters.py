@@ -1,5 +1,5 @@
 import unittest
-from losc.parameters import Parameters
+from slg.parameters import Parameters
 
 
 class ParametersTestCase(unittest.TestCase):

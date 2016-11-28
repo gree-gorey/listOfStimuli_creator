@@ -1,5 +1,5 @@
 import unittest
-from losc.word import Word
+from slg.word import Word
 
 
 class WordTestCase(unittest.TestCase):

@@ -47,11 +47,30 @@ class Store:
         self.len_of_categorical = 0
         self.parameters = Parameters()
 
+    def read_dummy_data_and_setup(self):
+        path = os.path.dirname(os.path.realpath(__file__))
+
+        self.read_data(path, '/data/test.tsv')
+
+        self.lists['list_1'] = list()
+        self.lists['list_2'] = list()
+        self.list_outputs['list_1'] = list()
+        self.list_outputs['list_2'] = list()
+
+        self.list_equality_counter['list_1'] = {}
+        self.list_equality_counter['list_2'] = {}
+
+        for word in self.words[:6:]:
+            self.lists['list_1'].append(word)
+
+        for word in self.words[6::]:
+            self.lists['list_2'].append(word)
+
     def get_max_list_length(self):
         return min([len(self.lists[list_name]) for list_name in self.lists])
 
-    def read_data(self, path):
-        with codecs.open(path + '/data/data.tsv', 'r', 'utf-8') as f:
+    def read_data(self, path, file_name='/data/data.tsv'):
+        with codecs.open(path + file_name, 'r', 'utf-8') as f:
             lines = f.readlines()
 
         features_list = lines[0].rstrip().split('\t')[1::]
@@ -75,8 +94,8 @@ class Store:
         for feature, value in zip(features_list, columns[1::]):
             if features_dict[feature] == 'int':
                 self.numeric_features_range[feature] = {
-                    'min': int(value),
-                    'max': int(value)
+                    'min': float(value),
+                    'max': float(value)
                 }
             elif features_dict[feature] == 'float':
                 self.numeric_features_range[feature] = {
@@ -92,7 +111,7 @@ class Store:
 
             for feature, value in zip(features_list, columns[1::]):
                 if features_dict[feature] == 'int':
-                    self.words[-1].features[feature] = int(value)
+                    self.words[-1].features[feature] = float(value)
                     if self.words[-1].features[feature] < self.numeric_features_range[feature]['min']:
                         self.numeric_features_range[feature]['min'] = self.words[-1].features[feature]
                     if self.words[-1].features[feature] > self.numeric_features_range[feature]['max']:
@@ -146,7 +165,9 @@ class Store:
         # print 'x'
 
         while self.sharp():
+            # print self.length
             # print 'foo'
+            # print self.allow, self.less()
 
             # Сбрасываем счетчики для 50/50
             self.reset_counters()
@@ -159,11 +180,22 @@ class Store:
 
             # сбрасывем листы и аутпут, добавляем в аутпут по одному случайному слову
             self.add_first()
+            # print 'reset'
 
             self.allow = True
 
+            # print self.same
+
             # пока длина аутпута не превышает требуемой
             while self.allow and self.less():
+                #
+                # print len(self.list_outputs['list_1'])
+                # print self.same
+                # print self.list_outputs['list_1'][0].normalized_features
+                # print [word.normalized_features['H'] for word in self.list_outputs['list_1']]
+                # print [word.normalized_features['H'] for word in self.list_outputs['list_2']]
+
+                # print 'egg'
                 time_current = time.time()
                 if time_current - self.time_begin > 20:
                     self.success = False
@@ -173,7 +205,10 @@ class Store:
                 self.add_closest()
                 # как только размер листа больше 5, начинаем проверять
                 if len(self.list_outputs['list_1']) > 5:
+                    # print 'foo'
                     self.test_and_fix()
+
+            # break
 
     def create_equality_counter(self, list_parameters_from_client):
         # создаем пустой счетчик
@@ -196,7 +231,7 @@ class Store:
     def find_min_max(self, word_list):
         for word in word_list:
             for key in word.features:
-                if type(word.features[key]) == float:
+                if type(word.features[key]) in [float, int]:
                     if word.features[key] < self.min[key]:
                         self.min[key] = word.features[key]
                     if word.features[key] > self.max[key]:
@@ -211,17 +246,15 @@ class Store:
         self.find_min_max(self.lists['list_1'])
         self.find_min_max(self.lists['list_2'])
 
+        # print self.max, self.min
+
         # нормализуем
-        for word in self.lists['list_1']:
-            word.normalized_features = word.features.copy()
-            for key in word.features:
-                if type(word.features[key]) == float:
-                    word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
-        for word in self.lists['list_2']:
-            word.normalized_features = word.features.copy()
-            for key in word.features:
-                if type(word.features[key]) == float:
-                    word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
+        for list_name in self.lists:
+            for word in self.lists[list_name]:
+                word.normalized_features = word.features.copy()
+                for key in word.features:
+                    if type(word.features[key]) in [float, int]:
+                        word.normalized_features[key] = (word.features[key] - self.min[key]) / (self.max[key] - self.min[key])
 
     def create_zip(self):
         path = os.path.dirname(os.path.realpath(__file__))
@@ -474,7 +507,6 @@ class Store:
                 # print word.features[feature]
                 self.list_equality_counter[list_name_key][feature][word.features[feature]] += 1
 
-
     def remove_features_from_counter(self, word, list_name_key):
         for feature in self.list_equality_counter[list_name_key]:
             # если значение этого параметра есть среди значений в счетчике, то минус 1
@@ -564,77 +596,86 @@ class Store:
 
         del self.lists['list_2'][index]
 
-    def compensate(self, first_list_mean, second_list_mean, i):
+    def compensate(self, feature_name):
         # print 777
 
-        # если это среднее больше в первом листе
-        if first_list_mean > second_list_mean:
-            self.check_words_for_allowance('list_1')
+        # находим имя листа с более высоким и более низким средним
+        lowest_mean_list_name = 'list_1' if self.list_mean['list_1'] <= self.list_mean['list_2'] else 'list_2'
+        highest_mean_list_name = 'list_1' if self.list_mean['list_1'] > self.list_mean['list_2'] else 'list_2'
 
-            lowest_from_rest = 1
-            first_list_index = 0
-            for j, word in enumerate(self.lists['list_1']):
-                if word.allowed:
-                    if word.normalized_features[i] < lowest_from_rest:
-                        lowest_from_rest = word.normalized_features[i]
-                        first_list_index = j
+        # print
+        # print 'means before compensation:'
+        # print '1st mean: {}'.format(self.list_mean['list_1'])
+        # print '2nd mean: {}'.format(self.list_mean['list_2'])
+        # print lowest_mean_list_name, highest_mean_list_name
 
-            self.check_words_for_allowance('list_2')
+        self.check_words_for_allowance(lowest_mean_list_name)
 
-            highest_from_rest = 0
-            second_list_index = 0
-            for j, word in enumerate(self.lists['list_2']):
-                if word.allowed:
-                    if word.normalized_features[i] > highest_from_rest:
-                        highest_from_rest = word.normalized_features[i]
-                        second_list_index = j
+        # обходим лист
+        min_value = 1
+        word_index_for_highest_mean_list_to_add = 0
+        for j, word in enumerate(self.lists[highest_mean_list_name]):
+            if word.allowed:
+                if word.normalized_features[feature_name] < min_value:
+                    min_value = word.normalized_features[feature_name]
+                    word_index_for_highest_mean_list_to_add = j
 
-        else:
-            self.check_words_for_allowance('list_2')
+        # print
+        # print min_value
+        #
+        # print [word.normalized_features[feature_name] for word in self.list_outputs[highest_mean_list_name]]
 
-            lowest_from_rest = 1
-            second_list_index = 0
-            for j, word in enumerate(self.lists['list_2']):
-                if word.allowed:
-                    if word.normalized_features[i] < lowest_from_rest:
-                        lowest_from_rest = word.normalized_features[i]
-                        second_list_index = j
+        self.check_words_for_allowance(highest_mean_list_name)
 
-            self.check_words_for_allowance('list_1')
+        max_value = 0
+        word_index_for_lowest_mean_list_to_add = 0
+        for j, word in enumerate(self.lists[lowest_mean_list_name]):
+            # print j
+            if word.allowed:
+                if word.normalized_features[feature_name] > max_value:
+                    max_value = word.normalized_features[feature_name]
+                    word_index_for_lowest_mean_list_to_add = j
 
-            highest_from_rest = 0
-            first_list_index = 0
-            for j, word in enumerate(self.lists['list_1']):
-                if word.allowed:
-                    if word.normalized_features[i] > highest_from_rest:
-                        highest_from_rest = word.normalized_features[i]
-                        first_list_index = j
-
-        word = self.lists['list_1'][first_list_index]
-        self.list_outputs['list_1'].append(word)
+        word_to_lowest = self.lists[lowest_mean_list_name][word_index_for_lowest_mean_list_to_add]
+        self.list_outputs[lowest_mean_list_name].append(word_to_lowest)
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'list_1')
-        del self.lists['list_1'][first_list_index]
+        self.add_features_into_counter(word_to_lowest, lowest_mean_list_name)
+        del self.lists[lowest_mean_list_name][word_index_for_lowest_mean_list_to_add]
+
+        # print len(self.lists[highest_mean_list_name])
+
+        # print self.list_mean['list_1']
 
         # print '\nCompensate'
         # print 'Should append: ', self.should_append_first
         # print 'Arguments feature of added word: {}'.format(word.features['arguments'])
         # print 'Counter: ', self.first_list_equality_counter
 
-        word = self.lists['list_2'][second_list_index]
-        self.list_outputs['list_2'].append(word)
+        # print len(self.lists[highest_mean_list_name])
+        # print word_index_for_highest_mean_list_to_add
+
+        word_to_highest = self.lists[highest_mean_list_name][word_index_for_highest_mean_list_to_add]
+        self.list_outputs[highest_mean_list_name].append(word_to_highest)
         # прибавляем параметры добавленного слова в счетчик
-        self.add_features_into_counter(word, 'list_2')
-        del self.lists['list_2'][second_list_index]
+        self.add_features_into_counter(word_to_highest, highest_mean_list_name)
+        del self.lists[highest_mean_list_name][word_index_for_highest_mean_list_to_add]
+
+        # print [word.normalized_features[feature_name] for word in self.list_outputs[highest_mean_list_name]]
 
     def test_and_fix(self):
-        for i in self.same:
-            p_value_same = self.test([word.normalized_features[i] for word in self.list_outputs['list_1']],
-                                     [word.normalized_features[i] for word in self.list_outputs['list_2']])
+        for feature_name in self.same:
+            # print feature_name
+            p_value_same = self.test([word.normalized_features[feature_name] for word in self.list_outputs['list_1']],
+                                     [word.normalized_features[feature_name] for word in self.list_outputs['list_2']])
+
+            # print p_value_same
 
             # if p_value_same < 0.2:
             if p_value_same < self.parameters.alpha * 4:
+                # print 888
                 # while p_value_same < 0.06:
+                # print 'before compensation:'
+                # print feature_name, p_value_same
 
                 # если листы достигли нужной пользователю длины
                 if self.equal():
@@ -651,16 +692,28 @@ class Store:
                     self.lists['list_2'].append(self.word_to_pop_from_the_list['list_2'])
 
                 # по всем словам в аутпуте считаем среднее параметра i
-                self.list_mean['list_1'] = mean([word.normalized_features[i] for word in self.list_outputs['list_1']])
-                self.list_mean['list_2'] = mean([word.normalized_features[i] for word in self.list_outputs['list_2']])
+                self.list_mean['list_1'] = mean([word.normalized_features[feature_name] for word in self.list_outputs['list_1']])
+                self.list_mean['list_2'] = mean([word.normalized_features[feature_name] for word in self.list_outputs['list_2']])
 
-                self.compensate(self.list_mean['list_1'], self.list_mean['list_2'], i)
+                # print self.list_mean
 
-            p_value_same = self.test([word.normalized_features[i] for word in self.list_outputs['list_1']],
-                                     [word.normalized_features[i] for word in self.list_outputs['list_2']])
+                self.compensate(feature_name)
+
+                p_value_same = self.test(
+                    [word.normalized_features[feature_name] for word in self.list_outputs['list_1']],
+                    [word.normalized_features[feature_name] for word in self.list_outputs['list_2']])
+
+                # print '\nafter compensation:'
+                # print feature_name, p_value_same
+                # print
+
+            p_value_same = self.test([word.normalized_features[feature_name] for word in self.list_outputs['list_1']],
+                                     [word.normalized_features[feature_name] for word in self.list_outputs['list_2']])
 
             # if p_value_same < 0.15:
             if p_value_same < self.parameters.alpha * 3:
+                # print 'Not allowed because of: {}'.format(feature_name)
+                # print
                 self.allow = False
 
     def high_low(self, high, low):
@@ -696,6 +749,7 @@ class Store:
             if is_match(word, parameters_for_one_list):
                 # print word.features["pos"]
                 filtered_list.append(word)
+                # print
 
         return filtered_list
 

@@ -61,7 +61,7 @@ def set_parameters():
             store.key_for_differ_feature = parameters_from_client['differ_feature']
             store.which_higher = parameters_from_client['which_is_higher']
             store.differentiate()
-        # print len(store.first_list)
+        # print len(store.lists['list_1'])
         # print store.second_list[0].name
 
         # устанавливаем отличающийся параметр
@@ -72,6 +72,7 @@ def set_parameters():
 
         # создаем вектор одинаковых
         store.parameters.same = parameters_from_client['same_features']
+        # print store.same
 
         # если листы оказались одинаковыми, нужно рандомно разделить их
         store.split()

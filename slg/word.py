@@ -6,8 +6,7 @@ class Word:
         self.name = u''
         self.features = dict()
         self.normalized_features = dict()
-        # это массив из значений фич, которые не должны отличаться
-        self.same = []
+        self.same = []  # это массив из значений фич, которые не должны отличаться
         self.value_of_differ_feature = 0
         self.distance = 1
         self.vector = []
