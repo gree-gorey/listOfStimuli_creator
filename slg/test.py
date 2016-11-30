@@ -37,6 +37,8 @@ def set_parameters():
         # создаем хэши-счетчики равновесия для тех параметров, которые выбрал пользователь
         store.list_equality_counter['list_1'] = store.create_equality_counter(parameters_from_client['list1'])
 
+        # print store.list_equality_counter
+
         # перемешиваем лист
         shuffle(store.lists['list_1'])
 

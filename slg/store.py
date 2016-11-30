@@ -133,30 +133,31 @@ class Store:
         for feature in self.categorical_features:
             self.categorical_features[feature] = sorted(self.categorical_features[feature])
 
-    def reset_counters(self):
-        for feature, parameters in self.list_equality_counter['list_1'].iteritems():
-            for parameter, value in parameters.iteritems():
-                parameters[parameter] = 0
-        for feature, parameters in self.list_equality_counter['list_2'].iteritems():
+    def reset_counters(self, list_name):
+        for feature, parameters in self.list_equality_counter[list_name].iteritems():
             for parameter, value in parameters.iteritems():
                 parameters[parameter] = 0
 
         # print '\n#####\nCounters were reset'
-        # print self.first_list_equality_counter
+        # print self.list_equality_counter[list_name]
 
     def generate_one(self):
         self.list_outputs['list_1'] = list()
+        # self.reset_counters('list_1')
         while len(self.list_outputs['list_1']) < self.parameters.length:
             # print 'foo'
             self.check_words_for_allowance('list_1')
+            # print self.list_equality_counter['list_1']
             # break
             for i, word in enumerate(self.lists['list_1']):
                 if word.allowed:
                     # print 'foo'
                     self.list_outputs['list_1'].append(word)
+                    # прибавляем параметры добавленного слова в счетчик
+                    self.add_features_into_counter(word, 'list_1')
                     del self.lists['list_1'][i]
-                    if len(self.list_outputs['list_1']) == self.parameters.length:
-                        break
+                    # if len(self.list_outputs['list_1']) == self.parameters.length:
+                    break
 
     def generate(self):
         for n in range(1, self.lists_number+1):
@@ -170,7 +171,8 @@ class Store:
             # print self.allow, self.less()
 
             # Сбрасываем счетчики для 50/50
-            self.reset_counters()
+            self.reset_counters('list_1')
+            self.reset_counters('list_2')
 
             # считаем сколько времени прошло и убиваем
             time_current = time.time()
@@ -279,15 +281,15 @@ class Store:
         with codecs.open(path + '/static/output/statistics.tsv', u'w', u'utf-8') as w:
             w.write(table)
 
-        z = zipfile.ZipFile(path + '/static/output/results.zip', u'w')
-
-        for list_key in self.list_outputs:
-            z.write(path + '/static/output/{}.tsv'.format(list_key), basename(path + '/static/output/{}.tsv'.format(list_key)))
-        z.write(path + '/static/output/statistics.tsv', basename(path + '/static/output/statistics.tsv'))
-
-        for list_key in self.list_outputs:
-            os.remove(path + '/static/output/{}.tsv'.format(list_key))
-        os.remove(path + '/static/output/statistics.tsv')
+        # z = zipfile.ZipFile(path + '/static/output/results.zip', u'w')
+        #
+        # for list_key in self.list_outputs:
+        #     z.write(path + '/static/output/{}.tsv'.format(list_key), basename(path + '/static/output/{}.tsv'.format(list_key)))
+        # z.write(path + '/static/output/statistics.tsv', basename(path + '/static/output/statistics.tsv'))
+        #
+        # for list_key in self.list_outputs:
+        #     os.remove(path + '/static/output/{}.tsv'.format(list_key))
+        # os.remove(path + '/static/output/statistics.tsv')
 
     def create_table_per_list(self, list_output, list_name):
         table_per_list = ''
@@ -351,6 +353,7 @@ class Store:
                     string = key + ': ' + str(ratio[key]) + '; '
                     ratio_string += string
 
+        # print '\nRATIO: '
         # print ratio_string
 
         list1_ratio = '\tratio\t' + '\t'.join(['NR'] * self.len_of_numeric) + ratio_string + '\r\n'

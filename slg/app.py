@@ -106,8 +106,10 @@ def set_parameters():
     parameters_from_client = flask.request.json
     # print parameters_from_client['list1']['features']['reflexivity']
 
-    # with codecs.open(u'lists_parameters.json', u'w', u'utf-8') as w:
-    #     json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
+    # print parameters_from_client
+
+    with codecs.open(u'lists_parameters.json', u'w', u'utf-8') as w:
+        json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
 
     if int(parameters_from_client['n']) == 1:
         # указываем количество листов
@@ -176,8 +178,8 @@ def create():
 
     parameters_from_client = flask.request.json
 
-    # with codecs.open(u'stat_parameters.json', u'w', u'utf-8') as w:
-    #     json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
+    with codecs.open(u'stat_parameters.json', u'w', u'utf-8') as w:
+        json.dump(parameters_from_client, w, ensure_ascii=False, indent=2)
 
     # time.sleep(2)
 
@@ -228,7 +230,7 @@ if __name__ == '__main__':
     app.run(
         # host="0.0.0.0",
         # port=int("80"),
-        # debug=True,
+        debug=True,
         threaded=True
     )
 

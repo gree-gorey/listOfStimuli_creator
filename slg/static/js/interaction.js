@@ -53,6 +53,8 @@ function setParameters() {
         return
     }
 
+    // console.log(parameters);
+
     var body = document.body;
 
     body.className = "loading";
@@ -69,7 +71,6 @@ function setParameters() {
                 let message = document.getElementById('message');
                 message.innerHTML = "Фильтр с заданными параметрами возвращает пустой лист. Измените фильтр.";
                 showSuccessMessage();
-                return
             }
         }
     }).done(function () {
